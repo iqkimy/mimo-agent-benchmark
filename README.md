@@ -2,6 +2,8 @@
 
 **Hypothesis-driven performance benchmarking for LLM agent workloads on [MiMo-V2.5](https://github.com/XiaomiMiMo/MiMo).**
 
+> "Hypothesis-driven" means each benchmark starts with a testable claim about model behavior (e.g. "tool routing accuracy stays >95% with 20+ tools"), then validates it through real MiMo API calls with measured latency, accuracy, and throughput metrics. The hypotheses define **what to test** — the results come entirely from live inference data.
+
 [![CI](https://github.com/iqkimy/mimo-agent-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/iqkimy/mimo-agent-benchmark/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-green.svg)](https://nodejs.org)
@@ -21,6 +23,22 @@ When developers use MiMo-V2.5 in agent frameworks (tool-calling loops, multi-age
 | **Token inefficiency** | Model generates verbose reasoning for simple tool calls | Higher cost, slower throughput |
 
 **MiMo Agent Benchmark** quantifies each of these with reproducible, structured test suites. It doesn't measure "how smart" the model is — it measures **how well it performs under real agent workload pressure**.
+
+### How Hypothesis → Result Works
+
+```
+Hypothesis (testable claim)
+    ↓
+Workload (structured test input with parameters)
+    ↓
+Harness (runs real MiMo API calls, collects metrics)
+    ↓
+Result (measured data: latency, accuracy, throughput)
+    ↓
+Verdict (PASS/FAIL based on hypothesis threshold)
+```
+
+All results are derived from live API calls — the hypotheses are starting points for testing, not sources of data.
 
 ## Quick Start
 
