@@ -1,0 +1,21 @@
+{
+  "id": "h5",
+  "title": "Token efficiency ratio >0.7 vs GPT-4o baseline",
+  "claim": "MiMo-V2.5 achieves a token efficiency ratio (useful output tokens / total tokens generated) above 0.7, comparable to GPT-4o",
+  "dimensions": ["efficiency", "cost"],
+  "workloads": ["tool-avalanche"],
+  "params": {
+    "taskTypes": ["tool_call", "summary", "extraction", "reasoning"],
+    "queriesPerType": 10,
+    "baselineModel": "gpt-4o",
+    "iterations": 3,
+    "timeout": 30000
+  },
+  "scoring": {
+    "primary": "token_efficiency_ratio",
+    "threshold": 0.70,
+    "direction": "above",
+    "formula": "useful_tokens / total_tokens_generated"
+  },
+  "tags": ["efficiency", "cost", "comparison"]
+}

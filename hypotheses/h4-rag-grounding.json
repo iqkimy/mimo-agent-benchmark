@@ -1,0 +1,21 @@
+{
+  "id": "h4",
+  "title": "RAG grounding accuracy >85% at 10K token context",
+  "claim": "When provided with retrieved documents (10K tokens of context), MiMo-V2.5 grounds >85% of its answers in the retrieved content rather than hallucinating",
+  "dimensions": ["accuracy", "grounding"],
+  "workloads": ["context-flood"],
+  "params": {
+    "contextTokens": 10240,
+    "documentsPerQuery": 8,
+    "queries": 20,
+    "iterations": 3,
+    "timeout": 30000
+  },
+  "scoring": {
+    "primary": "grounding_score",
+    "threshold": 0.85,
+    "direction": "above",
+    "formula": "grounded_answer_chunks / total_answer_chunks"
+  },
+  "tags": ["rag", "grounding", "hallucination"]
+}

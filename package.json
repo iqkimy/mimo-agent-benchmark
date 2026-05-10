@@ -1,12 +1,45 @@
 {
   "name": "mimo-agent-benchmark",
   "version": "0.1.0",
-  "description": "Automated performance benchmark for MiMo-V2.5 across Agent workloads",
-  "type": "module",
-  "scripts": {
-    "start": "node run.js",
-    "benchmark": "node run.js",
-    "test": "node --test measurements/**/*.test.js"
+  "description": "Hypothesis-driven benchmark suite for evaluating LLM agent workloads on MiMo-V2.5",
+  "main": "scripts/run.js",
+  "bin": {
+    "mimo-bench": "scripts/run.js",
+    "mimo-compare": "scripts/compare.js",
+    "mimo-report": "scripts/visualize.js"
   },
-  "license": "MIT"
+  "scripts": {
+    "bench": "node scripts/run.js",
+    "bench:ci": "node scripts/run.js --config workloads/reference/ci.json",
+    "bench:full": "node scripts/run.js --config workloads/reference/full.json",
+    "compare": "node scripts/compare.js",
+    "report": "node scripts/visualize.js",
+    "test": "node --test tests/**/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage tests/**/*.test.js",
+    "lint": "node --check harness/**/*.js scripts/**/*.js",
+    "validate": "node -e \"JSON.parse(require('fs').readFileSync('hypotheses/*.json'))\" 2>/dev/null || echo 'Use validate:hypotheses'; node scripts/validate.js"
+  },
+  "keywords": [
+    "mimo",
+    "benchmark",
+    "agent",
+    "llm",
+    "xiaomi",
+    "performance",
+    "evaluation"
+  ],
+  "author": "MiMo Agent Benchmark Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iqkimy/mimo-agent-benchmark.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iqkimy/mimo-agent-benchmark/issues"
+  },
+  "homepage": "https://github.com/iqkimy/mimo-agent-benchmark#readme",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

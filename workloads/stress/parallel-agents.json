@@ -1,0 +1,62 @@
+{
+  "id": "parallel-agents",
+  "category": "stress",
+  "description": "Measures coordination overhead when running multiple agent instances concurrently through the same MiMo endpoint. Tests whether parallel requests cause latency degradation beyond simple queuing.",
+  "hypotheses": ["h3"],
+  "params": {
+    "agentCounts": [1, 2, 3, 4, 6, 8],
+    "tasksPerAgent": 5,
+    "iterations": 3,
+    "taskTimeout": 60000
+  },
+  "input": {
+    "taskTemplate": {
+      "systemPrompt": "You are a data analyst agent. Process the following data request and return structured results.",
+      "tasks": [
+        {
+          "id": "summarize_report",
+          "prompt": "Summarize this quarterly report: {report_content}",
+          "expectedToolCalls": ["read_file", "calculate_stats"],
+          "maxTokens": 500
+        },
+        {
+          "id": "extract_metrics",
+          "prompt": "Extract key performance metrics from: {metrics_data}",
+          "expectedToolCalls": ["parse_data", "format_output"],
+          "maxTokens": 300
+        },
+        {
+          "id": "generate_insights",
+          "prompt": "Generate insights from: {analysis_data}",
+          "expectedToolCalls": ["analyze_trends", "create_summary"],
+          "maxTokens": 400
+        },
+        {
+          "id": "validate_data",
+          "prompt": "Validate the following dataset for anomalies: {dataset}",
+          "expectedToolCalls": ["check_schema", "detect_outliers"],
+          "maxTokens": 350
+        },
+        {
+          "id": "compare_periods",
+          "prompt": "Compare this period vs last: {comparison_data}",
+          "expectedToolCalls": ["calculate_delta", "rank_changes"],
+          "maxTokens": 450
+        }
+      ]
+    },
+    "dataFillers": {
+      "report_content": "Fill with realistic quarterly business report text (~2000 tokens)",
+      "metrics_data": "Fill with structured KPI data (~1500 tokens)",
+      "analysis_data": "Fill with analytical output text (~1800 tokens)",
+      "dataset": "Fill with tabular data (~2500 tokens)",
+      "comparison_data": "Fill with period-over-period data (~2000 tokens)"
+    }
+  },
+  "expected": {
+    "singleAgentLatencyP50Ms": 2000,
+    "maxOverheadAt8Agents": 2.0,
+    "minSuccessRate": 0.95,
+    "maxTimeoutRate": 0.05
+  }
+}

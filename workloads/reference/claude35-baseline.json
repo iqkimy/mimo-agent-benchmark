@@ -1,0 +1,16 @@
+{
+  "id": "claude35-baseline",
+  "model": "claude-3.5-sonnet",
+  "provider": "anthropic",
+  "description": "Reference baseline from Claude 3.5 Sonnet on the same benchmark suite. Used for comparison mode.",
+  "results": {
+    "h1": {"score": 0.91, "accuracy_degradation": 0.075, "latency_p50": 380},
+    "h2": {"score": 0.93, "tool_selection_accuracy": 0.95, "latency_p50": 210},
+    "h3": {"score": 0.90, "multi_agent_overhead": 1.6, "latency_p50": 3100},
+    "h4": {"score": 0.92, "grounding_score": 0.91, "latency_p50": 450},
+    "h5": {"score": 0.82, "token_efficiency_ratio": 0.68, "latency_p50": 280}
+  },
+  "compositeScore": 0.896,
+  "recordedAt": "2026-05-01T00:00:00Z",
+  "note": "Representative values for comparison. Replace with actual benchmark results."
+}

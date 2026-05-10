@@ -1,0 +1,16 @@
+{
+  "id": "gpt4o-baseline",
+  "model": "gpt-4o",
+  "provider": "openai",
+  "description": "Reference baseline from GPT-4o on the same benchmark suite. Used for comparison mode.",
+  "results": {
+    "h1": {"score": 0.92, "accuracy_degradation": 0.068, "latency_p50": 310},
+    "h2": {"score": 0.94, "tool_selection_accuracy": 0.96, "latency_p50": 195},
+    "h3": {"score": 0.88, "multi_agent_overhead": 1.7, "latency_p50": 2800},
+    "h4": {"score": 0.90, "grounding_score": 0.88, "latency_p50": 420},
+    "h5": {"score": 0.85, "token_efficiency_ratio": 0.72, "latency_p50": 250}
+  },
+  "compositeScore": 0.898,
+  "recordedAt": "2026-05-01T00:00:00Z",
+  "note": "Representative values for comparison. Replace with actual benchmark results."
+}

@@ -1,0 +1,98 @@
+{
+  "id": "code-refactor-session",
+  "category": "realistic",
+  "description": "Simulates a multi-file code refactoring session where the agent must understand codebase context, identify dependencies, and apply changes across files while maintaining consistency.",
+  "hypotheses": ["h1", "h2"],
+  "params": {
+    "fileCount": 8,
+    "totalContextTokens": 12000,
+    "iterations": 3,
+    "timeout": 45000
+  },
+  "input": {
+    "scenario": "Refactor a Node.js API service to replace a deprecated database driver with a new one",
+    "files": [
+      {
+        "name": "src/db/connection.js",
+        "role": "Database connection management",
+        "dependencies": ["config.js"],
+        "contentTemplate": "Uses old_driver.connect() — needs migration to new_driver.createPool()"
+      },
+      {
+        "name": "src/db/queries.js",
+        "role": "SQL query definitions",
+        "dependencies": ["connection.js"],
+        "contentTemplate": "Contains 15 query functions using old_driver.query()"
+      },
+      {
+        "name": "src/models/user.js",
+        "role": "User model with CRUD operations",
+        "dependencies": ["queries.js"],
+        "contentTemplate": "Import queries and wrap in model methods"
+      },
+      {
+        "name": "src/models/order.js",
+        "role": "Order model with complex joins",
+        "dependencies": ["queries.js"],
+        "contentTemplate": "Uses raw SQL with old driver syntax"
+      },
+      {
+        "name": "src/routes/api.js",
+        "role": "Express route definitions",
+        "dependencies": ["models/*"],
+        "contentTemplate": "Standard REST endpoints"
+      },
+      {
+        "name": "src/middleware/auth.js",
+        "role": "Authentication middleware",
+        "dependencies": ["db/connection.js"],
+        "contentTemplate": "Token validation with DB lookup"
+      },
+      {
+        "name": "config/database.json",
+        "role": "Database configuration",
+        "dependencies": [],
+        "contentTemplate": "Old driver config format"
+      },
+      {
+        "name": "tests/db.test.js",
+        "role": "Database integration tests",
+        "dependencies": ["db/*"],
+        "contentTemplate": "Tests using old driver mock"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "analyze_deps",
+        "prompt": "Analyze the dependency graph between these files. Which files need to change first?",
+        "expectedOutput": "Dependency order with rationale"
+      },
+      {
+        "id": "migrate_connection",
+        "prompt": "Refactor src/db/connection.js to use the new driver API",
+        "expectedOutput": "Updated connection.js with new_driver.createPool()"
+      },
+      {
+        "id": "migrate_queries",
+        "prompt": "Update all query functions in src/db/queries.js for the new driver",
+        "expectedOutput": "Updated queries.js with new driver API calls"
+      },
+      {
+        "id": "migrate_models",
+        "prompt": "Update both model files to work with the refactored queries",
+        "expectedOutput": "Updated model files with compatible imports"
+      },
+      {
+        "id": "update_tests",
+        "prompt": "Update the test file to mock the new driver instead of the old one",
+        "expectedOutput": "Updated test file with new mock setup"
+      }
+    ]
+  },
+  "expected": {
+    "depGraphAccuracy": ">= 0.90",
+    "codeCorrectness": ">= 0.85",
+    "consistencyScore": ">= 0.80",
+    "maxToolCalls": 20
+  }
+}

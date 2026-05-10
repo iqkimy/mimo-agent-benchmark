@@ -1,0 +1,65 @@
+{
+  "id": "data-analysis-pipeline",
+  "category": "realistic",
+  "description": "Simulates a sequential data processing pipeline where tool outputs feed into subsequent analysis steps. Tests the model's ability to maintain state and produce correct aggregations.",
+  "hypotheses": ["h1", "h2", "h5"],
+  "params": {
+    "pipelineStages": 6,
+    "dataVolume": "~5000 rows",
+    "iterations": 3,
+    "timeout": 45000
+  },
+  "input": {
+    "scenario": "Analyze monthly sales data, generate insights, and produce a board-ready report",
+    "stages": [
+      {
+        "stage": 1,
+        "name": "data_ingestion",
+        "prompt": "Load the sales data from the database and validate the schema. Confirm row count and column types.",
+        "tool": "query_database",
+        "output": "Schema validation report with row count"
+      },
+      {
+        "stage": 2,
+        "name": "data_cleaning",
+        "prompt": "Remove duplicates, handle null values in the revenue column (fill with median), and flag outliers (>3 std dev).",
+        "tool": "transform_data",
+        "output": "Cleaned dataset with cleaning log"
+      },
+      {
+        "stage": 3,
+        "name": "statistical_analysis",
+        "prompt": "Compute descriptive statistics, trend analysis, and seasonality decomposition for the cleaned data.",
+        "tool": "calculate_stats",
+        "output": "Statistics summary with trend and seasonality components"
+      },
+      {
+        "stage": 4,
+        "name": "segmentation",
+        "prompt": "Segment customers into high-value, medium-value, and low-value tiers based on revenue contribution. Apply Pareto analysis.",
+        "tool": "run_clustering",
+        "output": "Customer segments with Pareto breakdown"
+      },
+      {
+        "stage": 5,
+        "name": "visualization",
+        "prompt": "Create visualizations: (1) revenue trend line chart, (2) segment pie chart, (3) regional heatmap. Save all as files.",
+        "tool": "create_chart",
+        "output": "3 chart file paths"
+      },
+      {
+        "stage": 6,
+        "name": "report_generation",
+        "prompt": "Compile all findings into a structured board report with executive summary, key metrics, segment analysis, and recommendations.",
+        "tool": "create_report",
+        "output": "Report document URL"
+      }
+    ]
+  },
+  "expected": {
+    "pipelineCompletionRate": ">= 0.95",
+    "dataConsistencyAcrossStages": ">= 0.90",
+    "reportQuality": ">= 0.85",
+    "maxToolCalls": 15
+  }
+}

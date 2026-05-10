@@ -1,0 +1,78 @@
+{
+  "id": "customer-support-chain",
+  "category": "realistic",
+  "description": "Simulates a multi-turn customer support interaction with knowledge base retrieval, escalation logic, and response generation. Tests context retention across turns.",
+  "hypotheses": ["h1", "h4"],
+  "params": {
+    "conversationTurns": 12,
+    "knowledgeBaseSize": "~8000 tokens",
+    "iterations": 3,
+    "timeout": 45000
+  },
+  "input": {
+    "systemPrompt": "You are a customer support agent for a SaaS platform. Help the customer while maintaining conversation context. Use the knowledge base for technical answers.",
+    "knowledgeBase": [
+      {
+        "topic": "billing",
+        "entries": [
+          "Plans can be upgraded at any time; prorated charges apply",
+          "Refund policy: 30-day money-back guarantee for new subscriptions",
+          "Annual plans receive 20% discount vs monthly billing",
+          "Enterprise pricing requires sales contact"
+        ]
+      },
+      {
+        "topic": "technical",
+        "entries": [
+          "API rate limits: 1000 requests/minute for Pro, 100 for Basic",
+          "WebSocket connections support up to 50 concurrent streams",
+          "Data export available via /api/v2/export endpoint",
+          "Webhook retries: 3 attempts with exponential backoff"
+        ]
+      },
+      {
+        "topic": "account",
+        "entries": [
+          "Two-factor authentication can be enabled in Security settings",
+          "Team members can be invited via Settings → Team",
+          "SSO requires Enterprise plan and manual setup",
+          "API keys rotate every 90 days by default"
+        ]
+      }
+    ],
+    "conversation": [
+      {"turn": 1, "role": "customer", "message": "Hi, I just upgraded to Pro but I'm getting rate limited already. I thought Pro had higher limits?"},
+      {"turn": 2, "role": "customer", "message": "Also, we need to set up SSO for our team. Is that available on Pro?"},
+      {"turn": 3, "role": "customer", "message": "Can you check if there's been unusual API activity on our account? I want to make sure no one's using our keys."},
+      {"turn": 4, "role": "customer", "message": "One more thing — we're considering annual billing. What's the discount?"},
+      {"turn": 5, "role": "customer", "message": "Actually, before we commit to annual, can we get a refund if we're not satisfied?"},
+      {"turn": 6, "role": "customer", "message": "The webhook retries aren't working for us. We keep getting 504 errors on the third retry."},
+      {"turn": 7, "role": "customer", "message": "We have a new team member starting next week. How do I add them?"},
+      {"turn": 8, "role": "customer", "message": "Can they also get API access? We need to generate a key for them."},
+      {"turn": 9, "role": "customer", "message": "Wait, our current API keys expire in how long? I need to plan rotations."},
+      {"turn": 10, "role": "customer", "message": "Let me also ask — how do we export our historical data? We need it for compliance."},
+      {"turn": 11, "role": "customer", "message": "Actually, I realize we're on Basic not Pro. The rate limit is 100/min right? That explains everything."},
+      {"turn": 12, "role": "customer", "message": "OK so let's upgrade to Pro. But first confirm the rate limit difference and that SSO still needs Enterprise."}
+    ],
+    "expectedResponses": [
+      "Correctly identify Basic vs Pro rate limits (100 vs 1000)",
+      "Clarify SSO requires Enterprise, not Pro",
+      "Provide security guidance for key concerns",
+      "Quote 20% annual discount",
+      "Confirm 30-day refund policy",
+      "Explain webhook retry behavior",
+      "Guide team member invitation process",
+      "Explain API key generation for new members",
+      "State 90-day key rotation policy",
+      "Describe /api/v2/export endpoint",
+      "Catch the self-correction in turn 11",
+      "Provide accurate upgrade path with correct limits"
+    ]
+  },
+  "expected": {
+    "turnAccuracyRate": ">= 0.85",
+    "contextRetentionAtTurn12": ">= 0.80",
+    "knowledgeBaseGrounding": ">= 0.90",
+    "maxLatencyPerTurnMs": 5000
+  }
+}

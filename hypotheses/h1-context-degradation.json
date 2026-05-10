@@ -1,0 +1,19 @@
+{
+  "id": "h1",
+  "title": "Context degradation is <10% across 4K→16K token range",
+  "claim": "MiMo-V2.5 maintains accuracy within 10% of its 4K-token baseline when context length increases to 16K tokens in agent workflows",
+  "dimensions": ["latency", "accuracy"],
+  "workloads": ["context-flood"],
+  "params": {
+    "contextSizes": [1024, 2048, 4096, 8192, 12288, 16384],
+    "iterations": 5,
+    "timeout": 30000
+  },
+  "scoring": {
+    "primary": "accuracy_degradation",
+    "threshold": 0.10,
+    "direction": "below",
+    "formula": "1.0 - (accuracy_at_max_context - accuracy_at_min_context) / accuracy_at_min_context"
+  },
+  "tags": ["context", "degradation", "core"]
+}

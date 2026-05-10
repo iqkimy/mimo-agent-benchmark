@@ -1,0 +1,20 @@
+{
+  "id": "h2",
+  "title": "Tool routing accuracy stays >95% with 20+ tools",
+  "claim": "MiMo-V2.5 correctly selects the right tool and generates valid arguments for >95% of queries when 20 or more tools are available",
+  "dimensions": ["accuracy", "throughput"],
+  "workloads": ["tool-avalanche"],
+  "params": {
+    "toolCounts": [5, 10, 20, 30, 50],
+    "queriesPerLevel": 10,
+    "iterations": 3,
+    "timeout": 30000
+  },
+  "scoring": {
+    "primary": "tool_selection_accuracy",
+    "threshold": 0.95,
+    "direction": "above",
+    "formula": "correct_tool_selections / total_queries"
+  },
+  "tags": ["tools", "routing", "accuracy", "core"]
+}

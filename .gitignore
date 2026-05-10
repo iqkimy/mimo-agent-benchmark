@@ -1,4 +1,11 @@
 node_modules/
-results/
-*.log
 .env
+.env.*
+*.log
+results/20*
+results/latest
+results/*.json
+!results/.gitkeep
+coverage/
+.turbo/
+dist/

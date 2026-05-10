@@ -1,0 +1,20 @@
+{
+  "id": "h3",
+  "title": "Multi-agent coordination adds <2x latency overhead",
+  "claim": "Running N parallel agent instances through MiMo-V2.5 adds less than 2x the latency of a single agent for task completion",
+  "dimensions": ["latency", "resource"],
+  "workloads": ["parallel-agents"],
+  "params": {
+    "agentCounts": [1, 2, 3, 4, 6, 8],
+    "tasksPerAgent": 5,
+    "iterations": 3,
+    "timeout": 60000
+  },
+  "scoring": {
+    "primary": "multi_agent_overhead",
+    "threshold": 2.0,
+    "direction": "below",
+    "formula": "latency_at_N_agents / latency_at_1_agent"
+  },
+  "tags": ["multi-agent", "latency", "concurrency"]
+}

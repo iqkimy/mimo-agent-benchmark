@@ -1,0 +1,50 @@
+{
+  "id": "research-assistant-flow",
+  "category": "realistic",
+  "description": "Simulates a research assistant workflow: web search → content extraction → synthesis → citation management. Tests multi-tool orchestration and output quality.",
+  "hypotheses": ["h1", "h2", "h4"],
+  "params": {
+    "searchQueries": 4,
+    "documentsPerQuery": 3,
+    "iterations": 3,
+    "timeout": 60000
+  },
+  "input": {
+    "scenario": "Research the current state of edge computing in IoT, synthesize findings, and produce a cited technical brief",
+    "researchQuestions": [
+      "What are the main edge computing frameworks for IoT in 2026?",
+      "How do latency benchmarks compare between edge and cloud for real-time IoT?",
+      "What are the security challenges unique to edge computing in IoT?",
+      "Which industries have the highest adoption of edge IoT computing?"
+    ],
+    "outputRequirements": {
+      "format": "Technical brief with citations",
+      "sections": [
+        "Executive Summary (150 words)",
+        "Framework Comparison Table",
+        "Latency Analysis",
+        "Security Challenges",
+        "Industry Adoption Patterns",
+        "Recommendations",
+        "References (numbered)"
+      ],
+      "citationStyle": "numbered",
+      "maxWords": 2000
+    },
+    "toolSequence": [
+      {"step": 1, "tool": "web_search", "purpose": "Find relevant sources for each research question"},
+      {"step": 2, "tool": "extract_content", "purpose": "Extract key information from top search results"},
+      {"step": 3, "tool": "web_search", "purpose": "Follow up on gaps identified in initial extraction"},
+      {"step": 4, "tool": "extract_content", "purpose": "Extract from follow-up sources"},
+      {"step": 5, "tool": "create_summary", "purpose": "Synthesize all findings into coherent sections"},
+      {"step": 6, "tool": "create_report", "purpose": "Format as technical brief with citations"}
+    ]
+  },
+  "expected": {
+    "questionCoverage": ">= 0.90",
+    "citationAccuracy": ">= 0.80",
+    "sectionCompleteness": ">= 0.85",
+    "maxToolCalls": 20,
+    "maxTotalLatencyMs": 30000
+  }
+}

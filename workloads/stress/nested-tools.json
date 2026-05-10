@@ -1,0 +1,53 @@
+{
+  "id": "nested-tools",
+  "category": "stress",
+  "description": "Tests deep tool-call chaining where each tool's output becomes the next tool's input. Measures whether the model maintains context and correctness across 10+ sequential tool calls.",
+  "hypotheses": ["h1", "h2"],
+  "params": {
+    "chainDepths": [3, 5, 7, 10],
+    "iterations": 3,
+    "timeout": 60000
+  },
+  "input": {
+    "chains": [
+      {
+        "id": "data_pipeline",
+        "description": "Data processing pipeline with chained transformations",
+        "steps": [
+          {"tool": "query_database", "input": "SELECT * FROM raw_events WHERE date > '2026-01-01'", "outputType": "dataset"},
+          {"tool": "filter_rows", "input": "Remove rows where status = 'test'", "outputType": "filtered_dataset"},
+          {"tool": "transform_columns", "input": "Normalize revenue column, add computed field daily_avg", "outputType": "transformed_dataset"},
+          {"tool": "calculate_stats", "input": "Compute mean, median, std_dev for revenue", "outputType": "statistics"},
+          {"tool": "create_chart", "input": "Line chart of daily_avg over time", "outputType": "chart_url"},
+          {"tool": "generate_insights", "input": "Analyze trend and anomalies in the statistics", "outputType": "insights_text"},
+          {"tool": "create_report", "input": "Compile chart + insights into formatted report", "outputType": "report_url"},
+          {"tool": "send_notification", "input": "Email report to stakeholders", "outputType": "send_confirmation"},
+          {"tool": "log_audit", "input": "Record pipeline execution in audit log", "outputType": "log_entry"},
+          {"tool": "cleanup", "input": "Remove temporary files from pipeline", "outputType": "cleanup_status"}
+        ],
+        "successCriteria": "All 10 tools called in correct order with valid arguments at each step"
+      },
+      {
+        "id": "research_loop",
+        "description": "Research synthesis with iterative refinement",
+        "steps": [
+          {"tool": "web_search", "input": "Search for latest market trends in {topic}", "outputType": "search_results"},
+          {"tool": "extract_content", "input": "Extract key points from top 3 results", "outputType": "extracted_points"},
+          {"tool": "identify_gaps", "input": "Find missing information in extracted points", "outputType": "gap_list"},
+          {"tool": "web_search", "input": "Search for information on identified gaps", "outputType": "supplemental_results"},
+          {"tool": "merge_findings", "input": "Combine original and supplemental findings", "outputType": "merged_findings"},
+          {"tool": "fact_check", "input": "Verify claims against multiple sources", "outputType": "verified_claims"},
+          {"tool": "synthesize", "input": "Create coherent narrative from verified claims", "outputType": "synthesis"},
+          {"tool": "format_output", "input": "Format as structured markdown with citations", "outputType": "formatted_output"}
+        ],
+        "successCriteria": "8 tools called with correct data propagation between steps"
+      }
+    ]
+  },
+  "expected": {
+    "accuracyAtDepth3": ">= 0.98",
+    "accuracyAtDepth10": ">= 0.85",
+    "maxArgumentErrorRate": 0.05,
+    "maxLatencyP95Ms": 15000
+  }
+}

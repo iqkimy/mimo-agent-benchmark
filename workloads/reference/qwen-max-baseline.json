@@ -1,0 +1,16 @@
+{
+  "id": "qwen-max-baseline",
+  "model": "qwen-max",
+  "provider": "alibaba",
+  "description": "Reference baseline from Qwen-Max on the same benchmark suite. Used for comparison mode.",
+  "results": {
+    "h1": {"score": 0.88, "accuracy_degradation": 0.092, "latency_p50": 420},
+    "h2": {"score": 0.91, "tool_selection_accuracy": 0.93, "latency_p50": 230},
+    "h3": {"score": 0.85, "multi_agent_overhead": 2.1, "latency_p50": 3500},
+    "h4": {"score": 0.87, "grounding_score": 0.84, "latency_p50": 510},
+    "h5": {"score": 0.80, "token_efficiency_ratio": 0.65, "latency_p50": 310}
+  },
+  "compositeScore": 0.862,
+  "recordedAt": "2026-05-01T00:00:00Z",
+  "note": "Representative values for comparison. Replace with actual benchmark results."
+}

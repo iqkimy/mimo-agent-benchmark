@@ -1,0 +1,54 @@
+{
+  "id": "context-flood",
+  "category": "stress",
+  "description": "Gradually increases context size to measure accuracy decay. Each iteration pads the context with realistic agent conversation history while asking increasingly complex questions about early context.",
+  "hypotheses": ["h1", "h4"],
+  "params": {
+    "contextSizes": [1024, 2048, 4096, 8192, 12288, 16384],
+    "paddingStrategy": "agent_history",
+    "questionTypes": ["recall", "synthesis", "extraction"],
+    "iterations": 5
+  },
+  "input": {
+    "systemPrompt": "You are an AI assistant with access to the conversation history above. Answer each question precisely based on the context provided.",
+    "generateContext": {
+      "method": "agent_history",
+      "template": {
+        "turns": [
+          {"role": "user", "pattern": "analyze {topic} data"},
+          {"role": "assistant", "pattern": "Here's the analysis: {analysis}"},
+          {"role": "user", "pattern": "Can you extract the key metrics?"},
+          {"role": "assistant", "pattern": "Key metrics: {metrics}"}
+        ],
+        "topics": ["sales", "user engagement", "performance", "revenue", "retention"],
+        "fillerTokenCount": "target_size"
+      }
+    },
+    "questions": [
+      {
+        "type": "recall",
+        "prompt": "What was the exact revenue figure mentioned in the third analysis?",
+        "expectedPattern": "\\$[\\d,]+\\.?\\d*",
+        "groundTruth": "dynamic"
+      },
+      {
+        "type": "synthesis",
+        "prompt": "Compare the user engagement metrics from the first and last analyses. What's the trend?",
+        "expectedPattern": "(increase|decrease|stable|improved|declined)",
+        "groundTruth": "dynamic"
+      },
+      {
+        "type": "extraction",
+        "prompt": "List all unique metric names that appeared across all analyses.",
+        "expectedPattern": "\\d+ (metrics|items)",
+        "groundTruth": "dynamic"
+      }
+    ]
+  },
+  "expected": {
+    "accuracyAt4k": ">= 0.95",
+    "accuracyAt16k": ">= 0.85",
+    "maxDegradation": 0.10,
+    "maxLatencyP95Ms": 5000
+  }
+}

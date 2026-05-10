@@ -1,0 +1,101 @@
+{
+  "id": "tool-avalanche",
+  "category": "stress",
+  "description": "Tests tool-calling accuracy with progressively larger tool sets. Increases the number of available tools and measures whether the model still correctly selects and invokes the right tool.",
+  "hypotheses": ["h2", "h5"],
+  "params": {
+    "toolCounts": [5, 10, 20, 30, 50],
+    "queriesPerLevel": 10,
+    "iterations": 3
+  },
+  "input": {
+    "toolDefinitions": {
+      "method": "generated",
+      "categories": [
+        {
+          "name": "data_query",
+          "baseTool": "query_database",
+          "variants": ["query_sales_db", "query_users_db", "query_orders_db", "query_inventory_db", "query_analytics_db", "query_logs_db", "query_metrics_db", "query_events_db", "query_feedback_db", "query_transactions_db"]
+        },
+        {
+          "name": "visualization",
+          "baseTool": "create_chart",
+          "variants": ["create_bar_chart", "create_line_chart", "create_pie_chart", "create_scatter_plot", "create_heatmap", "create_histogram", "create_box_plot", "create_area_chart", "create_radar_chart", "create_treemap"]
+        },
+        {
+          "name": "file_ops",
+          "baseTool": "manage_file",
+          "variants": ["read_file", "write_file", "append_file", "delete_file", "list_files", "search_files", "compress_file", "decompress_file", "move_file", "copy_file"]
+        },
+        {
+          "name": "communication",
+          "baseTool": "send_message",
+          "variants": ["send_email", "send_slack", "send_webhook", "send_sms", "send_notification", "send_digest", "send_alert", "send_report", "send_summary", "send_reminder"]
+        },
+        {
+          "name": "compute",
+          "baseTool": "run_computation",
+          "variants": ["calculate_stats", "run_regression", "run_clustering", "run_classification", "run_forecast", "optimize_params", "run_simulation", "aggregate_data", "transform_data", "validate_data"]
+        }
+      ]
+    },
+    "queries": [
+      {
+        "intent": "Get last month's sales from the database",
+        "expectedTool": "query_sales_db",
+        "expectedArgs": {"period": "last_month", "metric": "sales"}
+      },
+      {
+        "intent": "Create a line chart of user growth over time",
+        "expectedTool": "create_line_chart",
+        "expectedArgs": {"data": "user_growth", "timeRange": "last_12_months"}
+      },
+      {
+        "intent": "Send the weekly report to the team via Slack",
+        "expectedTool": "send_slack",
+        "expectedArgs": {"content": "weekly_report", "channel": "team"}
+      },
+      {
+        "intent": "Run a forecast on next quarter's revenue",
+        "expectedTool": "run_forecast",
+        "expectedArgs": {"metric": "revenue", "horizon": "next_quarter"}
+      },
+      {
+        "intent": "Read the configuration file from the project",
+        "expectedTool": "read_file",
+        "expectedArgs": {"path": "config.json"}
+      },
+      {
+        "intent": "Get the average order value from the orders database",
+        "expectedTool": "query_orders_db",
+        "expectedArgs": {"metric": "avg_order_value"}
+      },
+      {
+        "intent": "Create a heatmap of user activity by hour",
+        "expectedTool": "create_heatmap",
+        "expectedArgs": {"data": "user_activity", "dimensions": ["hour", "day"]}
+      },
+      {
+        "intent": "Compress the analytics export before sending",
+        "expectedTool": "compress_file",
+        "expectedArgs": {"path": "analytics_export.csv"}
+      },
+      {
+        "intent": "Run clustering on customer segments",
+        "expectedTool": "run_clustering",
+        "expectedArgs": {"data": "customer_profiles", "algorithm": "kmeans"}
+      },
+      {
+        "intent": "Send a webhook notification when the pipeline finishes",
+        "expectedTool": "send_webhook",
+        "expectedArgs": {"event": "pipeline_complete", "url": "configured_webhook"}
+      }
+    ]
+  },
+  "expected": {
+    "accuracyAt5Tools": ">= 0.98",
+    "accuracyAt50Tools": ">= 0.92",
+    "maxDegradation": 0.08,
+    "maxLatencyP95Ms": 3000
+  }
+}

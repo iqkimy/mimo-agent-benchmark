@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "description": "Default scoring weights for composite benchmark score calculation",
+  "dimensions": {
+    "accuracy": {
+      "weight": 0.40,
+      "description": "Correctness of outputs, tool calls, and grounding",
+      "metrics": ["tool_selection_accuracy", "grounding_score", "response_correctness"]
+    },
+    "latency": {
+      "weight": 0.30,
+      "description": "Response time and throughput under load",
+      "metrics": ["p50_latency", "p95_latency", "throughput"]
+    },
+    "efficiency": {
+      "weight": 0.30,
+      "description": "Token usage efficiency and cost optimization",
+      "metrics": ["token_efficiency", "cost_per_task", "retries"]
+    }
+  },
+  "scoring": {
+    "passThreshold": 0.85,
+    "warningThreshold": 0.70,
+    "failThreshold": 0.50
+  }
+}
