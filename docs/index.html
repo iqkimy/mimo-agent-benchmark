@@ -3,523 +3,1004 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MiMo Agent Benchmark</title>
+<title>MiMo Agent Benchmark — Hypothesis-Driven Performance Testing</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0f;--card:#12121a;--border:#1e1e2e;--accent:#6c5ce7;--accent2:#00cec9;--text:#e2e8f0;--muted:#64748b;--green:#00b894;--red:#ff6b6b;--yellow:#feca57}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;position:relative}
-
-/* === Multi-layer grid background === */
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
-  background:
-    linear-gradient(rgba(108,92,231,.03) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(108,92,231,.03) 1px,transparent 1px),
-    linear-gradient(rgba(0,206,201,.02) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,206,201,.02) 1px,transparent 1px);
-  background-size:100px 100px,100px 100px,20px 20px,20px 20px;
-}
-body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(108,92,231,.06) 0%,transparent 70%),
-             radial-gradient(ellipse 60% 50% at 80% 100%,rgba(0,206,201,.04) 0%,transparent 70%);
+/* ========== RESET & BASE ========== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:#0a0a0f;color:#e0e0e0;line-height:1.6;
+  overflow-x:hidden;
 }
 
-/* === Floating decorative orbs === */
-.floating-orbs{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
-.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35;will-change:transform}
-.orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(108,92,231,.4),transparent 70%);top:-10%;left:10%;animation:orbDrift1 25s ease-in-out infinite}
-.orb-2{width:400px;height:400px;background:radial-gradient(circle,rgba(0,206,201,.35),transparent 70%);bottom:-5%;right:5%;animation:orbDrift2 30s ease-in-out infinite}
-.orb-3{width:350px;height:350px;background:radial-gradient(circle,rgba(168,85,247,.3),transparent 70%);top:40%;left:50%;animation:orbDrift3 22s ease-in-out infinite}
-.orb-4{width:300px;height:300px;background:radial-gradient(circle,rgba(0,184,148,.25),transparent 70%);top:20%;right:15%;animation:orbDrift4 28s ease-in-out infinite}
-.orb-5{width:250px;height:250px;background:radial-gradient(circle,rgba(108,92,231,.2),transparent 70%);bottom:20%;left:30%;animation:orbDrift5 35s ease-in-out infinite}
-@keyframes orbDrift1{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(60px,40px) scale(1.1)}50%{transform:translate(-30px,80px) scale(.95)}75%{transform:translate(40px,-20px) scale(1.05)}}
-@keyframes orbDrift2{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(-50px,-30px) scale(1.08)}50%{transform:translate(40px,-60px) scale(.92)}75%{transform:translate(-20px,40px) scale(1.03)}}
-@keyframes orbDrift3{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(70px,-40px) scale(1.12)}50%{transform:translate(-50px,30px) scale(.88)}75%{transform:translate(30px,50px) scale(1.06)}}
-@keyframes orbDrift4{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(-40px,50px) scale(.94)}50%{transform:translate(60px,20px) scale(1.08)}75%{transform:translate(-30px,-40px) scale(.97)}}
-@keyframes orbDrift5{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(50px,30px) scale(1.05)}50%{transform:translate(-40px,-50px) scale(.93)}75%{transform:translate(30px,-20px) scale(1.1)}}
+/* ========== CANVAS PARTICLES ========== */
+#particle-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
-/* === Section tinted backgrounds === */
-.section-tint-blue{background:linear-gradient(180deg,rgba(108,92,231,.02) 0%,rgba(108,92,231,.05) 50%,rgba(108,92,231,.02) 100%)}
-.section-tint-cyan{background:linear-gradient(180deg,rgba(0,206,201,.02) 0%,rgba(0,206,201,.04) 50%,rgba(0,206,201,.02) 100%)}
-.section-tint-purple{background:linear-gradient(180deg,rgba(168,85,247,.02) 0%,rgba(168,85,247,.04) 50%,rgba(168,85,247,.02) 100%)}
-.section-tint-green{background:linear-gradient(180deg,rgba(0,184,148,.02) 0%,rgba(0,184,148,.04) 50%,rgba(0,184,148,.02) 100%)}
-.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative;overflow:hidden;z-index:1}
-.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 50%,rgba(108,92,231,.08) 0%,transparent 50%),radial-gradient(circle at 70% 50%,rgba(0,206,201,.06) 0%,transparent 50%);animation:drift 20s ease-in-out infinite}
-@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-2%,2%)}}
-#particle-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
-.hero h1{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem;position:relative;z-index:1;opacity:0;transform:translateY(30px);animation:heroFadeIn 1s ease forwards .3s}
-.hero .tagline{font-size:1.25rem;color:var(--muted);max-width:600px;margin:0 auto 2rem;position:relative;z-index:1;opacity:0;transform:translateY(20px);animation:heroFadeIn 1s ease forwards .6s}
-.hero .badges{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;opacity:0;transform:translateY(20px);animation:heroFadeIn 1s ease forwards .9s}
-@keyframes heroFadeIn{to{opacity:1;transform:translateY(0)}}
-.badge{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:9999px;font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--card);transition:transform .3s,box-shadow .3s,border-color .3s}
-.badge:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(108,92,231,.2);border-color:var(--accent)}
-.badge .dot{width:8px;height:8px;border-radius:50%;display:inline-block;animation:dotPulse 2s ease-in-out infinite}
-@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
-.dot-green{background:var(--green)}.dot-purple{background:var(--accent)}.dot-cyan{background:var(--accent2)}
-.section{max-width:1100px;margin:0 auto;padding:5rem 2rem;position:relative;z-index:1}
-.section-title{font-size:2rem;font-weight:700;text-align:center;margin-bottom:.5rem}
-.section-sub{text-align:center;color:var(--muted);margin-bottom:3rem;max-width:700px;margin-left:auto;margin-right:auto}
+/* ========== GRID TEXTURE OVERLAY ========== */
+.grid-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(99,102,241,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(99,102,241,.03) 1px,transparent 1px);
+  background-size:60px 60px;
+}
 
-/* Scroll Reveal */
-.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s ease,transform .8s ease}
-.reveal.visible{opacity:1;transform:translateY(0)}
-.reveal-left{opacity:0;transform:translateX(-40px);transition:opacity .8s ease,transform .8s ease}
-.reveal-left.visible{opacity:1;transform:translateX(0)}
-.reveal-right{opacity:0;transform:translateX(40px);transition:opacity .8s ease,transform .8s ease}
-.reveal-right.visible{opacity:1;transform:translateX(0)}
+/* ========== FLOATING ORBS ========== */
+.orb{
+  position:absolute;border-radius:50%;filter:blur(100px);opacity:.35;pointer-events:none;
+  animation:orbFloat 20s ease-in-out infinite alternate;
+}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,#6366f1,transparent);top:-100px;right:-150px;animation-delay:0s}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,#06b6d4,transparent);bottom:20%;left:-100px;animation-delay:-5s}
+.orb-3{width:350px;height:350px;background:radial-gradient(circle,#8b5cf6,transparent);top:50%;right:10%;animation-delay:-10s}
+.orb-4{width:300px;height:300px;background:radial-gradient(circle,#ec4899,transparent);bottom:-50px;left:30%;animation-delay:-15s}
+@keyframes orbFloat{
+  0%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(30px,-40px) scale(1.1)}
+  66%{transform:translate(-20px,30px) scale(.95)}
+  100%{transform:translate(10px,-10px) scale(1.05)}
+}
 
-/* Card glow */
-.problem-card,.metric-card{position:relative;overflow:hidden}
-.problem-card::before,.metric-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at var(--mouse-x,50%) var(--mouse-y,50%),rgba(108,92,231,.12) 0%,transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none;z-index:0}
-.problem-card:hover::before,.metric-card:hover::before{opacity:1}
-.problem-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;transition:transform .3s cubic-bezier(.34,1.56,.64,1),border-color .3s,box-shadow .3s}
-.problem-card:hover{transform:translateY(-4px) scale(1.01);border-color:var(--accent);box-shadow:0 8px 30px rgba(108,92,231,.15)}
-.problem-card h3{font-size:1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;position:relative;z-index:1}
-.problem-card p{font-size:.9rem;color:var(--muted);position:relative;z-index:1}
-.emoji{font-size:1.2rem}
+/* ========== SECTION WRAPPER ========== */
+.page-content{position:relative;z-index:2}
 
-.problems{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+/* ========== NAVIGATION ========== */
+nav{
+  position:fixed;top:0;width:100%;z-index:100;
+  background:rgba(10,10,15,.75);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(99,102,241,.15);
+  transition:all .3s ease;
+}
+nav.scrolled{background:rgba(10,10,15,.92);box-shadow:0 4px 30px rgba(0,0,0,.5)}
+nav .nav-inner{max-width:1200px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+nav .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:700;font-size:1.15rem}
+nav .logo .logo-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#6366f1,#06b6d4);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+nav .nav-links{display:flex;gap:28px;align-items:center}
+nav .nav-links a{color:#a0a0b0;text-decoration:none;font-size:.9rem;transition:color .2s}
+nav .nav-links a:hover{color:#6366f1}
+nav .nav-cta{
+  padding:8px 20px;border-radius:8px;font-size:.85rem;font-weight:600;text-decoration:none;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+  transition:transform .2s,box-shadow .2s;
+}
+nav .nav-cta:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(99,102,241,.4)}
 
-.hypothesis-flow{display:flex;flex-direction:column;align-items:center;gap:0;margin:2rem 0}
-.flow-step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem 2rem;text-align:center;width:100%;max-width:500px;position:relative;opacity:0;transform:translateY(20px) scale(.97);transition:opacity .6s ease,transform .6s ease}
-.flow-step.flow-visible{opacity:1;transform:translateY(0) scale(1)}
-.flow-step h4{font-size:.9rem;color:var(--accent);margin-bottom:.25rem}
-.flow-step p{font-size:.85rem;color:var(--muted)}
-.flow-arrow{font-size:1.5rem;color:var(--accent);padding:.3rem 0;opacity:0;transform:scaleY(0);transition:opacity .4s ease,transform .4s ease}
-.flow-arrow.flow-visible{opacity:1;transform:scaleY(1)}
+/* ========== HERO ========== */
+.hero{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:120px 32px 80px;position:relative;
+}
+.hero-content{max-width:900px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 20px;border-radius:50px;font-size:.8rem;font-weight:600;
+  background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);
+  color:#a5b4fc;margin-bottom:28px;
+  animation:fadeInUp .8s ease both;
+}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:#6366f1;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.hero h1{
+  font-size:clamp(2.8rem,6vw,5rem);font-weight:800;line-height:1.1;
+  margin-bottom:24px;animation:fadeInUp .8s ease .1s both;
+}
+.hero h1 .gradient{
+  background:linear-gradient(135deg,#6366f1,#06b6d4,#8b5cf6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero p{
+  font-size:1.2rem;color:#9090a0;max-width:680px;margin:0 auto 40px;
+  animation:fadeInUp .8s ease .2s both;
+}
+.hero-stats{
+  display:flex;justify-content:center;gap:48px;margin-top:48px;
+  animation:fadeInUp .8s ease .4s both;
+}
+.hero-stat{text-align:center}
+.hero-stat .num{font-size:2rem;font-weight:800;color:#fff}
+.hero-stat .label{font-size:.8rem;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.hero-buttons{display:flex;gap:16px;justify-content:center;animation:fadeInUp .8s ease .3s both}
+.btn-primary{
+  padding:14px 32px;border-radius:12px;font-size:1rem;font-weight:700;text-decoration:none;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+  border:none;cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+  animation:btnPulse 3s ease-in-out infinite;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(99,102,241,.5);animation:none}
+.btn-secondary{
+  padding:14px 32px;border-radius:12px;font-size:1rem;font-weight:600;text-decoration:none;
+  background:rgba(255,255,255,.05);color:#ccc;border:1px solid rgba(255,255,255,.1);
+  transition:all .2s;cursor:pointer;
+}
+.btn-secondary:hover{background:rgba(255,255,255,.1);border-color:rgba(99,102,241,.4)}
+@keyframes btnPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.4)}
+  50%{box-shadow:0 0 20px 5px rgba(99,102,241,.2)}
+}
 
-.hypothesis-table{width:100%;border-collapse:collapse;margin:2rem 0}
-.hypothesis-table th,.hypothesis-table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid var(--border);font-size:.9rem}
-.hypothesis-table th{color:var(--muted);font-weight:500;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
-.hypothesis-table tr{transition:background .2s}
-.hypothesis-table tr:hover{background:rgba(108,92,231,.05)}
-.hypothesis-table tbody tr{opacity:0;transform:translateX(-15px);transition:opacity .5s ease,transform .5s ease}
-.hypothesis-table tbody tr.table-visible{opacity:1;transform:translateX(0)}
-.status-active{color:var(--green);font-weight:600}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
-.metric-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center;transition:transform .3s,box-shadow .3s,border-color .3s}
-.metric-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,206,201,.1);border-color:var(--accent2)}
-.metric-card .value{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.metric-card .label{font-size:.85rem;color:var(--muted);margin-top:.25rem}
+/* ========== PARALLAX CONTAINER ========== */
+.parallax-section{position:relative}
 
-.output-demo{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;font-family:'SF Mono',Consolas,monospace;font-size:.85rem;line-height:1.8;overflow-x:auto;margin:2rem 0;position:relative}
-.output-demo::before{content:'';position:absolute;top:12px;left:12px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:16px 0 0 var(--yellow),32px 0 0 var(--green)}
-.output-demo .prompt{color:var(--accent2)}
-.output-demo .dim{color:var(--muted)}
-.output-demo .green{color:var(--green)}
-.output-demo .yellow{color:var(--yellow)}
-.output-demo .red{color:var(--red)}
-.output-line{opacity:0;transform:translateX(-10px);transition:opacity .4s ease,transform .4s ease}
-.output-line.line-visible{opacity:1;transform:translateX(0)}
+/* ========== SECTION BASE ========== */
+section{padding:100px 32px;position:relative}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-label{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;
+  color:#6366f1;margin-bottom:12px;
+}
+.section-label::before{content:'';width:20px;height:2px;background:#6366f1}
+.section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:16px;color:#fff}
+.section-desc{font-size:1.05rem;color:#808090;max-width:600px;margin-bottom:48px}
 
-.cta{text-align:center;padding:5rem 2rem;position:relative;z-index:1}
-.cta h2{font-size:2rem;margin-bottom:1rem}
-.cta-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.8rem 2rem;background:linear-gradient(135deg,var(--accent),#a855f7);color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden}
-.cta-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transition:left .5s}
-.cta-btn:hover::before{left:100%}
-.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(108,92,231,.4)}
-.cta-btn-pulse{animation:btnPulse 3s ease-in-out infinite}
-@keyframes btnPulse{0%,100%{box-shadow:0 0 20px rgba(108,92,231,.2)}50%{box-shadow:0 0 35px rgba(108,92,231,.4),0 0 60px rgba(108,92,231,.1)}}
-.cta-sub{color:var(--muted);margin-top:1rem;font-size:.9rem}
-footer{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);position:relative;z-index:1}
-.scroller{position:relative;overflow:hidden}
-.scroller::after{content:'';position:absolute;right:0;top:0;bottom:0;width:60px;background:linear-gradient(90deg,transparent,var(--bg));pointer-events:none}
+/* ========== SCROLL REVEAL ========== */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .7s ease,transform .7s ease}
+.reveal.revealed{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
 
-/* Typing cursor for output */
-.cursor{display:inline-block;width:8px;height:16px;background:var(--accent2);margin-left:2px;animation:blink 1s step-end infinite;vertical-align:text-bottom}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* ========== PAIN POINT CARDS ========== */
+.pain-section{background:linear-gradient(180deg,transparent,rgba(99,102,241,.02),transparent)}
+.pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.pain-card{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;padding:32px 28px;position:relative;overflow:hidden;
+  transition:transform .3s,border-color .3s;cursor:default;
+}
+.pain-card::before{
+  content:'';position:absolute;top:0;left:0;width:100%;height:100%;
+  background:radial-gradient(circle 200px at var(--mx,50%) var(--my,50%),rgba(99,102,241,.1),transparent);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.pain-card:hover{transform:translateY(-4px);border-color:rgba(99,102,241,.3)}
+.pain-card:hover::before{opacity:1}
+.pain-card .icon{
+  width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:18px;
+}
+.pain-card h3{font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:8px}
+.pain-card p{font-size:.9rem;color:#707080;line-height:1.5}
+.pain-card .impact{
+  margin-top:14px;padding:8px 14px;border-radius:8px;font-size:.78rem;font-weight:600;
+  background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.15);
+  display:inline-block;
+}
+.pain-card:nth-child(1) .icon{background:rgba(239,68,68,.1);color:#f87171}
+.pain-card:nth-child(2) .icon{background:rgba(245,158,11,.1);color:#fbbf24}
+.pain-card:nth-child(3) .icon{background:rgba(168,85,247,.1);color:#c084fc}
+.pain-card:nth-child(4) .icon{background:rgba(6,182,212,.1);color:#22d3ee}
+.pain-card:nth-child(5) .icon{background:rgba(34,197,94,.1);color:#4ade80}
 
-/* Smooth scroll */
-html{scroll-behavior:smooth}
+/* ========== WORKFLOW SECTION ========== */
+.workflow-section{
+  background:linear-gradient(180deg,transparent,rgba(6,182,212,.02),transparent);
+}
+.workflow-track{
+  display:flex;align-items:center;gap:0;overflow-x:auto;padding:20px 0;
+  scrollbar-width:none;
+}
+.workflow-track::-webkit-scrollbar{display:none}
+.workflow-step{
+  flex-shrink:0;text-align:center;padding:28px 32px;position:relative;
+  min-width:180px;
+}
+.workflow-step .step-num{
+  width:56px;height:56px;border-radius:50%;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;font-weight:800;
+  background:rgba(99,102,241,.12);border:2px solid rgba(99,102,241,.3);
+  color:#a5b4fc;transition:all .4s;
+}
+.workflow-step.active .step-num{
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  border-color:#6366f1;color:#fff;box-shadow:0 0 30px rgba(99,102,241,.4);
+}
+.workflow-step h4{font-size:.95rem;font-weight:700;color:#ddd;margin-bottom:4px}
+.workflow-step p{font-size:.78rem;color:#666}
+.workflow-arrow{
+  flex-shrink:0;width:60px;display:flex;align-items:center;justify-content:center;
+  color:#333;font-size:1.4rem;
+}
+.workflow-arrow svg{width:40px;height:20px;stroke:#444;fill:none;stroke-width:2}
+
+/* ========== HYPOTHESIS TABLE ========== */
+.hypo-section{background:linear-gradient(180deg,transparent,rgba(139,92,246,.02),transparent)}
+.hypo-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:16px;overflow:hidden;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.hypo-table th{
+  padding:16px 20px;text-align:left;font-size:.75rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;color:#888;
+  background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);
+}
+.hypo-table td{
+  padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:.9rem;color:#bbb;
+}
+.hypo-table tr:last-child td{border-bottom:none}
+.hypo-table tr:hover td{background:rgba(99,102,241,.04)}
+.hypo-table .hypo-id{
+  font-weight:800;color:#6366f1;font-family:'SF Mono',monospace;font-size:.85rem;
+}
+.hypo-table .status-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;border-radius:50px;font-size:.75rem;font-weight:600;
+  background:rgba(34,197,94,.1);color:#4ade80;
+}
+.hypo-table .status-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80}
+.hypo-table .dim-tag{
+  display:inline-block;padding:3px 10px;border-radius:6px;font-size:.72rem;
+  background:rgba(99,102,241,.08);color:#a5b4fc;margin:2px 4px 2px 0;
+}
+
+/* ========== WORKLOAD SECTION ========== */
+.workload-section{}
+.workload-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.workload-group h3{
+  font-size:1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;
+}
+.workload-group h3 .tag{
+  padding:4px 10px;border-radius:6px;font-size:.7rem;font-weight:600;
+}
+.tag-stress{background:rgba(239,68,68,.1);color:#f87171}
+.tag-realistic{background:rgba(34,197,94,.1);color:#4ade80}
+.tag-reference{background:rgba(99,102,241,.1);color:#a5b4fc}
+.workload-list{list-style:none}
+.workload-list li{
+  padding:14px 18px;border-radius:10px;margin-bottom:8px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+  font-size:.88rem;color:#999;transition:all .2s;
+  display:flex;align-items:center;gap:10px;
+}
+.workload-list li:hover{background:rgba(255,255,255,.06);border-color:rgba(99,102,241,.2);color:#ddd}
+.workload-list li .file-icon{font-size:14px;opacity:.5}
+
+/* ========== TERMINAL ========== */
+.terminal-section{
+  background:linear-gradient(180deg,transparent,rgba(6,182,212,.015),transparent);
+}
+.terminal{
+  background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);border-radius:16px;
+  overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.terminal-header{
+  padding:12px 18px;display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);
+}
+.terminal-dot{width:12px;height:12px;border-radius:50%}
+.terminal-dot:nth-child(1){background:#ff5f57}
+.terminal-dot:nth-child(2){background:#febc2e}
+.terminal-dot:nth-child(3){background:#28c840}
+.terminal-title{margin-left:12px;font-size:.78rem;color:#666;font-family:monospace}
+.terminal-body{
+  padding:24px;font-family:'SF Mono','Fira Code','Consolas',monospace;
+  font-size:.82rem;line-height:1.8;overflow-x:auto;max-height:420px;
+}
+.terminal-body .line{display:block;white-space:pre}
+.terminal-body .prompt{color:#4ade80}
+.terminal-body .cmd{color:#e0e0e0}
+.terminal-body .comment{color:#555}
+.terminal-body .output{color:#9090a0}
+.terminal-body .highlight{color:#6366f1}
+.terminal-body .success{color:#4ade80}
+.terminal-body .warn{color:#fbbf24}
+.terminal-body .dim{color:#444}
+.terminal-line{opacity:0;animation:terminalType .3s ease forwards}
+@keyframes terminalType{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+
+/* ========== STATS SECTION ========== */
+.stats-section{
+  background:linear-gradient(180deg,transparent,rgba(99,102,241,.03),transparent);
+}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.stat-card{
+  text-align:center;padding:36px 20px;border-radius:16px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  transition:transform .3s;
+}
+.stat-card:hover{transform:translateY(-4px)}
+.stat-card .stat-value{
+  font-size:2.6rem;font-weight:800;margin-bottom:6px;
+  background:linear-gradient(135deg,#6366f1,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.stat-card .stat-label{font-size:.82rem;color:#666;text-transform:uppercase;letter-spacing:1px}
+.stat-card .stat-sub{font-size:.75rem;color:#444;margin-top:6px}
+
+/* ========== ARCHITECTURE ========== */
+.arch-section{background:linear-gradient(180deg,transparent,rgba(139,92,246,.015),transparent)}
+.arch-diagram{
+  background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.06);border-radius:16px;
+  padding:40px;font-family:'SF Mono',monospace;font-size:.8rem;
+  overflow-x:auto;line-height:1.7;color:#666;
+}
+.arch-diagram .arch-line{display:block;white-space:pre}
+.arch-diagram .arch-accent{color:#6366f1}
+.arch-diagram .arch-bright{color:#a5b4fc}
+.arch-diagram .arch-dim{color:#333}
+
+/* ========== METRICS TABLE ========== */
+.metrics-section{}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.metrics-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.metrics-table th{
+  padding:12px 16px;text-align:left;font-size:.7rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;color:#666;
+  background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);
+}
+.metrics-table td{padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.03);font-size:.82rem;color:#999}
+.metrics-table tr:last-child td{border-bottom:none}
+.metrics-table .mono{font-family:'SF Mono',monospace;color:#a5b4fc;font-weight:600}
+
+/* ========== CTA SECTION ========== */
+.cta-section{text-align:center;padding:120px 32px}
+.cta-box{
+  max-width:700px;margin:0 auto;padding:60px 48px;border-radius:24px;
+  background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.08));
+  border:1px solid rgba(99,102,241,.2);position:relative;overflow:hidden;
+}
+.cta-box::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 0deg,transparent,rgba(99,102,241,.1),transparent,rgba(6,182,212,.1),transparent);
+  animation:ctaSpin 10s linear infinite;
+}
+@keyframes ctaSpin{to{transform:rotate(360deg)}}
+.cta-box>*{position:relative;z-index:1}
+.cta-box h2{font-size:2rem;font-weight:800;margin-bottom:12px;color:#fff}
+.cta-box p{color:#9090a0;margin-bottom:32px;font-size:1.05rem}
+.cta-box .btn-primary{font-size:1.1rem;padding:16px 40px}
+
+/* ========== FOOTER ========== */
+footer{
+  padding:40px 32px;text-align:center;
+  border-top:1px solid rgba(255,255,255,.05);
+  font-size:.82rem;color:#444;
+}
+footer a{color:#6366f1;text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:768px){
+  .hero-stats{flex-direction:column;gap:24px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .workload-grid{grid-template-columns:1fr}
+  .metrics-grid{grid-template-columns:1fr}
+  .pain-grid{grid-template-columns:1fr}
+  nav .nav-links{display:none}
+  .hypo-table{font-size:.8rem}
+  .hypo-table th,.hypo-table td{padding:10px 12px}
+}
 </style>
 </head>
 <body>
 
-<!-- Floating decorative orbs -->
-<div class="floating-orbs">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <div class="orb orb-4"></div>
-  <div class="orb orb-5"></div>
-</div>
+<!-- PARTICLE CANVAS -->
+<canvas id="particle-canvas"></canvas>
 
-<div class="hero">
-  <canvas id="particle-canvas"></canvas>
-  <h1>MiMo Agent Benchmark</h1>
-  <p class="tagline">Hypothesis-driven performance benchmarking for LLM agent workloads on MiMo-V2.5</p>
-  <div class="badges">
-    <span class="badge"><span class="dot dot-green"></span>MIT License</span>
-    <span class="badge"><span class="dot dot-purple"></span>45 Files · 4,400+ Lines</span>
-    <span class="badge"><span class="dot dot-cyan"></span>19 Tests Passing</span>
-    <span class="badge"><span class="dot dot-green"></span>Zero Dependencies</span>
-  </div>
-</div>
+<!-- GRID TEXTURE -->
+<div class="grid-overlay"></div>
 
-<div class="section section-tint-blue">
-  <h2 class="section-title reveal">Why This Exists</h2>
-  <p class="section-sub reveal">Standard LLM benchmarks test single-shot Q&A. But Agent frameworks generate completely different workloads — and MiMo-V2.5's performance under those conditions was unknown.</p>
-  <div class="problems">
-    <div class="problem-card reveal">
-      <h3><span class="emoji">📉</span> Context Degradation</h3>
-      <p>Model loses track of earlier tool results as context grows past 8K tokens. Silent wrong answers, missed instructions.</p>
-    </div>
-    <div class="problem-card reveal">
-      <h3><span class="emoji">🔧</span> Tool Routing Failures</h3>
-      <p>Model calls wrong tools or passes malformed arguments at scale. Broken pipelines, retry storms.</p>
-    </div>
-    <div class="problem-card reveal">
-      <h3><span class="emoji">🐢</span> Parallel Agent Slowdown</h3>
-      <p>Multi-agent systems see 3-5x latency increase vs single-agent. Unacceptable UX in production.</p>
-    </div>
-    <div class="problem-card reveal">
-      <h3><span class="emoji">📚</span> RAG Grounding Drift</h3>
-      <p>Model hallucinates answers instead of citing retrieved documents. Unreliable RAG outputs.</p>
-    </div>
-    <div class="problem-card reveal">
-      <h3><span class="emoji">💸</span> Token Inefficiency</h3>
-      <p>Model generates verbose reasoning for simple tool calls. Higher cost, slower throughput.</p>
+<!-- FLOATING ORBS -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<div class="orb orb-4"></div>
+
+<!-- NAVIGATION -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <span class="logo-icon">⚡</span>
+      <span>MiMo Agent Benchmark</span>
+    </a>
+    <div class="nav-links">
+      <a href="#problems">Problems</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#hypotheses">Hypotheses</a>
+      <a href="#workloads">Workloads</a>
+      <a href="#output">Output</a>
+      <a href="#stats">Stats</a>
+      <a href="https://github.com/iqkimy/mimo-agent-benchmark" target="_blank" class="nav-cta">★ GitHub</a>
     </div>
   </div>
-</div>
+</nav>
 
-<div class="section section-tint-purple">
-  <h2 class="section-title reveal">How It Works</h2>
-  <p class="section-sub reveal">Hypotheses define <strong>what to test</strong> — results come entirely from live MiMo API calls. No simulated data, no assumptions.</p>
-  <div class="hypothesis-flow">
-    <div class="flow-step"><h4>① Hypothesis</h4><p>"Tool routing accuracy stays &gt;95% with 20+ tools"</p></div>
-    <div class="flow-arrow">↓</div>
-    <div class="flow-step"><h4>② Workload</h4><p>tool-avalanche.json — 50 tools, 10 test cases</p></div>
-    <div class="flow-arrow">↓</div>
-    <div class="flow-step"><h4>③ Harness</h4><p>Runs each case 5× via real MiMo API calls</p></div>
-    <div class="flow-arrow">↓</div>
-    <div class="flow-step"><h4>④ Result</h4><p>93.2% accuracy @ 284ms avg latency</p></div>
-    <div class="flow-arrow">↓</div>
-    <div class="flow-step" style="border-color:var(--green)"><h4>⑤ Verdict</h4><p style="color:var(--green);font-weight:600">PASS — exceeds 95% threshold</p></div>
-  </div>
-</div>
+<!-- PAGE CONTENT -->
+<div class="page-content">
 
-<div class="section section-tint-cyan">
-  <h2 class="section-title reveal">Hypotheses Under Test</h2>
-  <p class="section-sub reveal">Five falsifiable claims about MiMo-V2.5 behavior, each backed by structured workloads.</p>
-  <table class="hypothesis-table">
-    <thead><tr><th>ID</th><th>Claim</th><th>Dimensions</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>h1</td><td>Context degradation is &lt;10% across 4K→32K tokens</td><td>latency, accuracy</td><td class="status-active">● Active</td></tr>
-      <tr><td>h2</td><td>Tool routing accuracy stays &gt;95% with 20+ tools</td><td>accuracy, throughput</td><td class="status-active">● Active</td></tr>
-      <tr><td>h3</td><td>Multi-agent coordination adds &lt;2x latency overhead</td><td>latency, resource</td><td class="status-active">● Active</td></tr>
-      <tr><td>h4</td><td>RAG grounding accuracy stays &gt;85% with retrieved docs</td><td>accuracy, grounding</td><td class="status-active">● Active</td></tr>
-      <tr><td>h5</td><td>Token efficiency ratio &gt;0.3 for standard agent tasks</td><td>efficiency, cost</td><td class="status-active">● Active</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="section section-tint-green">
-  <h2 class="section-title reveal">Workload Library</h2>
-  <p class="section-sub reveal">9 structured workloads across stress tests, realistic scenarios, and cross-model baselines.</p>
-  <div class="problems">
-    <div class="problem-card reveal">
-      <h3><span class="emoji">⚡</span> Stress Tests (5)</h3>
-      <p>Context flooding, tool avalanches, nested tool chains, parallel agent storms, adversarial prompts.</p>
+  <!-- ========== HERO ========== -->
+  <section class="hero parallax-section" id="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Open Source · MIT License
+      </div>
+      <h1>
+        <span class="gradient">MiMo Agent</span><br>
+        Benchmark
+      </h1>
+      <p>Hypothesis-driven performance benchmarking for LLM agent workloads. Test, measure, and compare MiMo-V2.5 under real agent pressure.</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/iqkimy/mimo-agent-benchmark" target="_blank" class="btn-primary">View on GitHub →</a>
+        <a href="#output" class="btn-secondary">See Sample Output</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num" data-target="4400" data-suffix="+">0</div>
+          <div class="label">Lines of Code</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-target="45" data-suffix="">0</div>
+          <div class="label">Files</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-target="5" data-suffix="">0</div>
+          <div class="label">Hypotheses</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-target="9" data-suffix="">0</div>
+          <div class="label">Workloads</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num" data-target="19" data-suffix="">0</div>
+          <div class="label">Tests Passing</div>
+        </div>
+      </div>
     </div>
-    <div class="problem-card reveal">
-      <h3><span class="emoji">🌍</span> Realistic Scenarios (4)</h3>
-      <p>Code refactoring, data pipeline analysis, customer support chains, research synthesis.</p>
+  </section>
+
+  <!-- ========== PAIN POINTS ========== -->
+  <section class="pain-section parallax-section" id="problems">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">Why This Exists</div>
+        <h2 class="section-title">Agent Workloads Break Differently</h2>
+        <p class="section-desc">Standard LLM benchmarks don't capture what happens when MiMo-V2.5 runs in real agent frameworks — tool-calling loops, multi-agent pipelines, RAG chains.</p>
+      </div>
+      <div class="pain-grid">
+        <div class="pain-card reveal reveal-delay-1">
+          <div class="icon">🧠</div>
+          <h3>Context Degradation</h3>
+          <p>Model loses track of earlier tool results as context grows past 8K tokens.</p>
+          <div class="impact">⚠ Silent wrong answers, missed instructions</div>
+        </div>
+        <div class="pain-card reveal reveal-delay-2">
+          <div class="icon">🔧</div>
+          <h3>Tool Routing Failures</h3>
+          <p>Model calls wrong tools or passes malformed arguments at scale.</p>
+          <div class="impact">⚠ Broken pipelines, retry storms</div>
+        </div>
+        <div class="pain-card reveal reveal-delay-3">
+          <div class="icon">🤖</div>
+          <h3>Parallel Agent Slowdown</h3>
+          <p>Multi-agent systems see 3-5x latency increase vs single-agent.</p>
+          <div class="impact">⚠ Unacceptable UX in production</div>
+        </div>
+        <div class="pain-card reveal reveal-delay-4">
+          <div class="icon">📚</div>
+          <h3>Retrieval Grounding Drift</h3>
+          <p>Model hallucinates answers instead of citing retrieved documents.</p>
+          <div class="impact">⚠ Unreliable RAG outputs</div>
+        </div>
+        <div class="pain-card reveal reveal-delay-4">
+          <div class="icon">💸</div>
+          <h3>Token Inefficiency</h3>
+          <p>Model generates verbose reasoning for simple tool calls.</p>
+          <div class="impact">⚠ Higher cost, slower throughput</div>
+        </div>
+      </div>
     </div>
-    <div class="problem-card reveal">
-      <h3><span class="emoji">📊</span> Cross-Model Baselines (3)</h3>
-      <p>GPT-4o, Claude 3.5 Sonnet, Qwen-Max — for direct comparison with MiMo-V2.5.</p>
+  </section>
+
+  <!-- ========== WORKFLOW ========== -->
+  <section class="workflow-section parallax-section" id="workflow">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">Hypothesis → Verdict Pipeline</h2>
+        <p class="section-desc">Every benchmark starts with a testable claim. The results come entirely from live MiMo API calls.</p>
+      </div>
+      <div class="workflow-track reveal">
+        <div class="workflow-step" data-step="1">
+          <div class="step-num">H</div>
+          <h4>Hypothesis</h4>
+          <p>Define testable claim</p>
+        </div>
+        <div class="workflow-arrow">
+          <svg viewBox="0 0 40 20"><path d="M2 10 L32 10 M26 4 L34 10 L26 16"/></svg>
+        </div>
+        <div class="workflow-step" data-step="2">
+          <div class="step-num">W</div>
+          <h4>Workload</h4>
+          <p>Structured test input</p>
+        </div>
+        <div class="workflow-arrow">
+          <svg viewBox="0 0 40 20"><path d="M2 10 L32 10 M26 4 L34 10 L26 16"/></svg>
+        </div>
+        <div class="workflow-step" data-step="3">
+          <div class="step-num">E</div>
+          <h4>Execute</h4>
+          <p>Real MiMo API calls</p>
+        </div>
+        <div class="workflow-arrow">
+          <svg viewBox="0 0 40 20"><path d="M2 10 L32 10 M26 4 L34 10 L26 16"/></svg>
+        </div>
+        <div class="workflow-step" data-step="4">
+          <div class="step-num">R</div>
+          <h4>Result</h4>
+          <p>Metrics collected</p>
+        </div>
+        <div class="workflow-arrow">
+          <svg viewBox="0 0 40 20"><path d="M2 10 L32 10 M26 4 L34 10 L26 16"/></svg>
+        </div>
+        <div class="workflow-step" data-step="5">
+          <div class="step-num">V</div>
+          <h4>Verdict</h4>
+          <p>PASS / FAIL</p>
+        </div>
+      </div>
+
+      <!-- Concrete example -->
+      <div class="reveal" style="margin-top:48px">
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot"></span>
+            <span class="terminal-dot"></span>
+            <span class="terminal-dot"></span>
+            <span class="terminal-title">hypothesis-example.json</span>
+          </div>
+          <div class="terminal-body">
+            <span class="line"><span class="comment">// Example: Hypothesis h2 — Tool Routing</span></span>
+            <span class="line"><span class="highlight">"Hypothesis:"</span> <span class="cmd">"MiMo-V2.5 retains &gt;90% tool-calling accuracy with 50+ tools in context"</span></span>
+            <span class="line"><span class="dim">     ↓</span></span>
+            <span class="line"><span class="comment">"Workload:"</span> <span class="output">workloads/stress/tool-avalanche.json (50 tools, 10 test cases)</span></span>
+            <span class="line"><span class="dim">     ↓</span></span>
+            <span class="line"><span class="comment">"Harness:"</span> <span class="output">Runs each case 5×, collects timing + accuracy metrics</span></span>
+            <span class="line"><span class="dim">     ↓</span></span>
+            <span class="line"><span class="success">"Result:"</span> <span class="cmd">93.2% accuracy @ 284ms avg latency → </span><span class="success">PASS ✓</span></span>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<div class="section section-tint-cyan">
-  <h2 class="section-title reveal">Sample Output</h2>
-  <p class="section-sub reveal">Real benchmark results from a dry-run execution.</p>
-  <div class="output-demo">
-<span class="output-line"><span class="prompt">$</span> node scripts/run.js --hypothesis h2</span>
-<span class="output-line"></span>
-<span class="output-line"><span class="dim">Loading hypothesis: h2-tool-routing</span></span>
-<span class="output-line"><span class="dim">Workloads: tool-avalanche (50 tools × 10 cases × 5 runs)</span></span>
-<span class="output-line"><span class="dim">Adapter: mimo-v2.5-pro via token-plan</span></span>
-<span class="output-line"></span>
-<span class="output-line"><span class="green">✓ h2-tool-routing</span> — <span class="yellow">93.2% accuracy</span> @ 284ms avg</span>
-<span class="output-line">  ├─ prompt_tokens:  12,847 avg</span>
-<span class="output-line">  ├─ completion_tokens:  342 avg</span>
-<span class="output-line">  ├─ p50_latency:  267ms</span>
-<span class="output-line">  ├─ p95_latency:  412ms</span>
-<span class="output-line">  └─ verdict: <span class="green">PASS</span> (threshold: 95%)</span>
-<span class="output-line"></span>
-<span class="output-line"><span class="dim">Composite score: 0.87 / 1.00</span></span>
-<span class="output-line"><span class="dim">Results saved to results/2026-05-10-h2.json</span></span>
-  </div>
-</div>
+  <!-- ========== HYPOTHESES TABLE ========== -->
+  <section class="hypo-section parallax-section" id="hypotheses">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">What We Test</div>
+        <h2 class="section-title">5 Hypotheses, Each With a Clear Verdict</h2>
+        <p class="section-desc">Every hypothesis defines a testable claim about model behavior with measurable thresholds.</p>
+      </div>
+      <div class="reveal">
+        <table class="hypo-table">
+          <thead>
+            <tr><th>ID</th><th>Hypothesis</th><th>Dimensions</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="hypo-id">H1</td>
+              <td>Context degradation is &lt;10% across 4K→16K token range</td>
+              <td><span class="dim-tag">latency</span><span class="dim-tag">accuracy</span></td>
+              <td><span class="status-badge">Active</span></td>
+            </tr>
+            <tr>
+              <td class="hypo-id">H2</td>
+              <td>Tool routing accuracy stays &gt;95% with 20+ tools</td>
+              <td><span class="dim-tag">accuracy</span><span class="dim-tag">throughput</span></td>
+              <td><span class="status-badge">Active</span></td>
+            </tr>
+            <tr>
+              <td class="hypo-id">H3</td>
+              <td>Multi-agent coordination adds &lt;2× latency overhead</td>
+              <td><span class="dim-tag">latency</span><span class="dim-tag">resource</span></td>
+              <td><span class="status-badge">Active</span></td>
+            </tr>
+            <tr>
+              <td class="hypo-id">H4</td>
+              <td>RAG grounding accuracy &gt;85% at 10K token context</td>
+              <td><span class="dim-tag">accuracy</span><span class="dim-tag">grounding</span></td>
+              <td><span class="status-badge">Active</span></td>
+            </tr>
+            <tr>
+              <td class="hypo-id">H5</td>
+              <td>Token efficiency ratio &gt;0.7 vs GPT-4o baseline</td>
+              <td><span class="dim-tag">efficiency</span><span class="dim-tag">cost</span></td>
+              <td><span class="status-badge">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-<div class="section section-tint-purple">
-  <h2 class="section-title reveal">Key Numbers</h2>
-  <div class="metrics-grid">
-    <div class="metric-card reveal"><div class="value" data-target="5">0</div><div class="label">Hypotheses Under Test</div></div>
-    <div class="metric-card reveal"><div class="value" data-target="9">0</div><div class="label">Structured Workloads</div></div>
-    <div class="metric-card reveal"><div class="value" data-target="19">0</div><div class="label">Tests Passing</div></div>
-    <div class="metric-card reveal"><div class="value" data-target="0">0</div><div class="label">External Dependencies</div></div>
-    <div class="metric-card reveal"><div class="value" data-target="4400" data-suffix="+">0</div><div class="label">Lines of Code</div></div>
-    <div class="metric-card reveal"><div class="value" data-target="3">0</div><div class="label">Cross-Model Baselines</div></div>
-  </div>
-</div>
+  <!-- ========== WORKLOADS ========== -->
+  <section class="workload-section parallax-section" id="workloads">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">Test Arsenal</div>
+        <h2 class="section-title">9 Workloads Across 3 Categories</h2>
+        <p class="section-desc">From stress tests that push limits to realistic production scenarios.</p>
+      </div>
+      <div class="workload-grid">
+        <div class="workload-group reveal reveal-delay-1">
+          <h3><span class="tag tag-stress">STRESS</span> Push to the Limit</h3>
+          <ul class="workload-list">
+            <li><span class="file-icon">📄</span> context-flood.json — Context size 1K → 32K tokens</li>
+            <li><span class="file-icon">📄</span> tool-avalanche.json — 5 to 100 tools available</li>
+            <li><span class="file-icon">📄</span> parallel-agents.json — 1 to 8 concurrent instances</li>
+            <li><span class="file-icon">📄</span> nested-tools.json — 10-level deep chained calls</li>
+            <li><span class="file-icon">📄</span> adversarial-prompt.json — Prompt injection resistance</li>
+          </ul>
+        </div>
+        <div class="workload-group reveal reveal-delay-2">
+          <h3><span class="tag tag-realistic">REALISTIC</span> Production Scenarios</h3>
+          <ul class="workload-list">
+            <li><span class="file-icon">📄</span> code-refactor-session.json — Multi-file refactoring</li>
+            <li><span class="file-icon">📄</span> data-analysis-pipeline.json — Sequential processing</li>
+            <li><span class="file-icon">📄</span> customer-support-chain.json — Multi-turn + KB retrieval</li>
+            <li><span class="file-icon">📄</span> research-assistant-flow.json — Search + summarize + cite</li>
+          </ul>
+        </div>
+        <div class="workload-group reveal reveal-delay-3" style="grid-column:1/-1">
+          <h3><span class="tag tag-reference">REFERENCE</span> Cross-Model Baselines</h3>
+          <ul class="workload-list">
+            <li><span class="file-icon">📄</span> gpt4o-baseline.json — GPT-4o reference results</li>
+            <li><span class="file-icon">📄</span> claude35-baseline.json — Claude 3.5 Sonnet reference results</li>
+            <li><span class="file-icon">📄</span> qwen-max-baseline.json — Qwen-Max reference results</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<div class="cta">
-  <h2 class="reveal">Get Started</h2>
-  <a class="cta-btn cta-btn-pulse reveal" href="https://github.com/iqkimy/mimo-agent-benchmark">
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-    View on GitHub
-  </a>
-  <p class="cta-sub reveal">MIT Licensed · Node.js 20+ · Zero dependencies</p>
-</div>
+  <!-- ========== ARCHITECTURE ========== -->
+  <section class="arch-section parallax-section" id="architecture">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">Under the Hood</div>
+        <h2 class="section-title">Clean Architecture, Zero Dependencies</h2>
+        <p class="section-desc">Core engine uses only Node.js built-ins. Adapter pattern makes adding new models trivial.</p>
+      </div>
+      <div class="reveal">
+        <div class="arch-diagram">
+          <span class="arch-line"><span class="arch-accent">┌──────────────────────────────────────────────────────────┐</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-bright">CLI Layer</span>                                                  <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">run.js · compare.js · visualize.js</span>                       <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">├──────────────────────────────────────────────────────────┤</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-bright">Harness Engine</span>                                            <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">┌─────────────┐  ┌──────────────┐  ┌────────────────┐</span> <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">│</span> <span class="arch-bright">Orchestrator</span><span class="arch-dim">│  │</span> <span class="arch-bright">Scheduler</span>  <span class="arch-dim">│  │</span> <span class="arch-bright">Executor</span>      <span class="arch-dim">│</span> <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">└─────────────┘  └──────────────┘  └────────────────┘</span> <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">├──────────────────────────────────────────────────────────┤</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-bright">Adapters · Collectors · Reporters</span>                       <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">mimo.js │ timing │ tokens │ console</span>                     <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">openai.js│ accuracy│ memory │ json</span>                     <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">         │         │        │ markdown</span>                  <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">├──────────────────────────────────────────────────────────┤</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-bright">Hypotheses · Workloads · Scoring</span>                       <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">│</span> <span class="arch-dim">h1-context.json │ stress/ │ realistic/ │ scoring/</span>      <span class="arch-accent">│</span></span>
+          <span class="arch-line"><span class="arch-accent">└──────────────────────────────────────────────────────────┘</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<footer>
-  MiMo Agent Benchmark · Built for the MiMo-V2.5 ecosystem · <a href="https://github.com/iqkimy/mimo-agent-benchmark" style="color:var(--accent);text-decoration:none">GitHub</a>
-</footer>
+  <!-- ========== METRICS ========== -->
+  <section class="metrics-section parallax-section" id="metrics">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">What Gets Measured</div>
+        <h2 class="section-title">Structured Metrics, Not Gut Feel</h2>
+      </div>
+      <div class="metrics-grid reveal">
+        <div>
+          <h3 style="font-size:.9rem;font-weight:700;margin-bottom:16px;color:#a5b4fc">General Metrics</h3>
+          <table class="metrics-table">
+            <thead><tr><th>Metric</th><th>Unit</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">latency_p50</td><td>ms</td><td>Median end-to-end latency</td></tr>
+              <tr><td class="mono">latency_p95</td><td>ms</td><td>95th percentile latency</td></tr>
+              <tr><td class="mono">latency_p99</td><td>ms</td><td>99th percentile latency</td></tr>
+              <tr><td class="mono">throughput</td><td>tasks/s</td><td>Completed tasks per second</td></tr>
+              <tr><td class="mono">accuracy</td><td>%</td><td>Correct output percentage</td></tr>
+              <tr><td class="mono">token_efficiency</td><td>ratio</td><td>Useful / total tokens</td></tr>
+              <tr><td class="mono">cost_per_task</td><td>$</td><td>Estimated cost per task</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:.9rem;font-weight:700;margin-bottom:16px;color:#22d3ee">Agent-Specific Metrics</h3>
+          <table class="metrics-table">
+            <thead><tr><th>Metric</th><th>Unit</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">tool_call_accuracy</td><td>%</td><td>Correct tool selection + args</td></tr>
+              <tr><td class="mono">tool_call_latency</td><td>ms</td><td>Decision → tool call complete</td></tr>
+              <tr><td class="mono">context_retention</td><td>%</td><td>Accuracy on early context refs</td></tr>
+              <tr><td class="mono">multi_agent_sync</td><td>ratio</td><td>Coordination efficiency</td></tr>
+              <tr><td class="mono">grounding_score</td><td>%</td><td>Answers grounded in retrieved ctx</td></tr>
+              <tr><td class="mono">retry_rate</td><td>%</td><td>Tool calls needing retry</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SAMPLE OUTPUT ========== -->
+  <section class="terminal-section parallax-section" id="output">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">See It In Action</div>
+        <h2 class="section-title">Sample Output</h2>
+        <p class="section-desc">Run the benchmark and get structured JSON results with PASS/FAIL verdicts.</p>
+      </div>
+      <div class="terminal reveal" id="terminal-demo">
+        <div class="terminal-header">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-title">zsh — mimo-agent-benchmark</span>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <span class="line terminal-line" style="animation-delay:.2s"><span class="prompt">$ </span><span class="cmd">node scripts/run.js --hypothesis h1</span></span>
+          <span class="line terminal-line" style="animation-delay:.5s"></span>
+          <span class="line terminal-line" style="animation-delay:.7s"><span class="dim">  ╭──────────────────────────────────────────╮</span></span>
+          <span class="line terminal-line" style="animation-delay:.9s"><span class="dim">  │</span> <span class="highlight">MiMo Agent Benchmark v0.1.0</span>                <span class="dim">│</span></span>
+          <span class="line terminal-line" style="animation-delay:1.1s"><span class="dim">  │</span> <span class="output">Hypothesis: h1 — Context Degradation</span>      <span class="dim">│</span></span>
+          <span class="line terminal-line" style="animation-delay:1.3s"><span class="dim">  ╰──────────────────────────────────────────╯</span></span>
+          <span class="line terminal-line" style="animation-delay:1.5s"></span>
+          <span class="line terminal-line" style="animation-delay:1.7s"><span class="output">  Running 5 iterations across 4 context sizes...</span></span>
+          <span class="line terminal-line" style="animation-delay:2.0s"><span class="dim">  ┌──────────┬──────────┬──────────┬──────────┐</span></span>
+          <span class="line terminal-line" style="animation-delay:2.2s"><span class="dim">  │</span> <span class="highlight">Context  </span><span class="dim">│</span> <span class="highlight">Accuracy </span><span class="dim">│</span> <span class="highlight">Latency  </span><span class="dim">│</span> <span class="highlight">Status   </span><span class="dim">│</span></span>
+          <span class="line terminal-line" style="animation-delay:2.4s"><span class="dim">  ├──────────┼──────────┼──────────┼──────────┤</span></span>
+          <span class="line terminal-line" style="animation-delay:2.6s"><span class="dim">  │</span> <span class="cmd"> 4K tok  </span><span class="dim">│</span> <span class="success">  96.0%   </span><span class="dim">│</span> <span class="cmd">  342ms   </span><span class="dim">│</span> <span class="success">   ✓      </span><span class="dim">│</span></span>
+          <span class="line terminal-line" style="animation-delay:2.8s"><span class="dim">  │</span> <span class="cmd"> 8K tok  </span><span class="dim">│</span> <span class="success">  94.0%   </span><span class="dim">│</span> <span class="cmd">  478ms   </span><span class="dim">│</span> <span class="success">   ✓      </span><span class="dim">│</span></span>
+          <span class="line terminal-line" style="animation-delay:3.0s"><span class="dim">  │</span> <span class="cmd">12K tok  </span><span class="dim">│</span> <span class="success">  91.5%   </span><span class="dim">│</span> <span class="cmd">  549ms   </span><span class="dim">│</span> <span class="success">   ✓      </span><span class="dim">│</span></span>
+          <span class="line terminal-line" style="animation-delay:3.2s"><span class="dim">  │</span> <span class="cmd">16K tok  </span><span class="dim">│</span> <span class="success">  89.0%   </span><span class="dim">│</span> <span class="cmd">  621ms   </span><span class="dim">│</span> <span class="success">   ✓      </span><span class="dim">│</span></span>
+          <span class="line terminal-line" style="animation-delay:3.4s"><span class="dim">  └──────────┴──────────┴──────────┴──────────┘</span></span>
+          <span class="line terminal-line" style="animation-delay:3.6s"></span>
+          <span class="line terminal-line" style="animation-delay:3.8s"><span class="comment">  Degradation: 7.3% (threshold: &lt;10%)</span></span>
+          <span class="line terminal-line" style="animation-delay:4.0s"><span class="success">  Verdict: PASS ✓  (composite score: 0.913)</span></span>
+          <span class="line terminal-line" style="animation-delay:4.2s"></span>
+          <span class="line terminal-line" style="animation-delay:4.4s"><span class="output">  Results saved to results/2026-05-10T17-52-00/h1-context.json</span></span>
+          <span class="line terminal-line" style="animation-delay:4.6s"><span class="prompt">$ </span><span class="cursor" style="animation:blink 1s step-end infinite">█</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATS ========== -->
+  <section class="stats-section parallax-section" id="stats">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">By The Numbers</div>
+        <h2 class="section-title">Project at a Glance</h2>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card reveal reveal-delay-1">
+          <div class="stat-value" data-target="4400" data-suffix="+">0</div>
+          <div class="stat-label">Lines of Code</div>
+          <div class="stat-sub">Zero dependencies</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-2">
+          <div class="stat-value" data-target="45" data-suffix="">0</div>
+          <div class="stat-label">Source Files</div>
+          <div class="stat-sub">Clean modular structure</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-3">
+          <div class="stat-value" data-target="19" data-suffix="">0</div>
+          <div class="stat-label">Tests Passing</div>
+          <div class="stat-sub">CI on every PR</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-4">
+          <div class="stat-value" data-target="3" data-suffix="">0</div>
+          <div class="stat-label">Model Adapters</div>
+          <div class="stat-sub">MiMo · GPT-4o · Claude</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA ========== -->
+  <section class="cta-section parallax-section">
+    <div class="cta-box reveal">
+      <h2>Ready to Benchmark?</h2>
+      <p>Clone the repo, set your API key, and start testing in under 5 minutes.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+        <a href="https://github.com/iqkimy/mimo-agent-benchmark" target="_blank" class="btn-primary">★ Star on GitHub</a>
+        <a href="https://github.com/iqkimy/mimo-agent-benchmark#quick-start" target="_blank" class="btn-secondary">Quick Start Guide →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer>
+    <p>Built with ⚡ for the MiMo community · <a href="https://github.com/iqkimy/mimo-agent-benchmark/blob/main/LICENSE" target="_blank">MIT License</a> · <a href="https://github.com/XiaomiMiMo/MiMo" target="_blank">Xiaomi MiMo-V2.5</a></p>
+  </footer>
+
+</div><!-- /page-content -->
 
 <script>
+// ============================================================
+// PARTICLE CANVAS — mouse-interactive floating particles
+// ============================================================
 (function(){
-  'use strict';
-
-  // ============ PARTICLE BACKGROUND ============
   const canvas = document.getElementById('particle-canvas');
   const ctx = canvas.getContext('2d');
-  let particles = [];
-  let animFrame;
-  let mouse = {x: -1000, y: -1000};
+  let W, H, particles = [], mouse = {x:-1000,y:-1000};
+  const COUNT = 80;
+  const CONNECT_DIST = 120;
+  const MOUSE_RADIUS = 180;
 
-  function resizeCanvas(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize);
+  resize();
 
   class Particle {
-    constructor(){
-      this.reset();
-    }
+    constructor(){this.reset()}
     reset(){
-      this.x = Math.random() * canvas.width;
-      this.y = Math.random() * canvas.height;
-      this.size = Math.random() * 2 + 0.5;
-      this.speedX = (Math.random() - 0.5) * 0.4;
-      this.speedY = (Math.random() - 0.5) * 0.4;
-      this.opacity = Math.random() * 0.5 + 0.1;
-      this.hue = Math.random() > 0.5 ? 255 : 180; // purple or cyan
+      this.x = Math.random()*W;
+      this.y = Math.random()*H;
+      this.vx = (Math.random()-.5)*.4;
+      this.vy = (Math.random()-.5)*.4;
+      this.r = Math.random()*1.5+.5;
+      this.alpha = Math.random()*.4+.1;
     }
     update(){
-      this.x += this.speedX;
-      this.y += this.speedY;
-      if(this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-      if(this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-      // Mouse repel
-      const dx = this.x - mouse.x;
-      const dy = this.y - mouse.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if(dist < 120){
-        this.x += dx / dist * 1.5;
-        this.y += dy / dist * 1.5;
+      this.x += this.vx;
+      this.y += this.vy;
+      if(this.x<0||this.x>W) this.vx*=-1;
+      if(this.y<0||this.y>H) this.vy*=-1;
+      // mouse repel
+      const dx=this.x-mouse.x, dy=this.y-mouse.y, dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<MOUSE_RADIUS){
+        const force = (MOUSE_RADIUS-dist)/MOUSE_RADIUS * .02;
+        this.vx += dx/dist*force;
+        this.vy += dy/dist*force;
       }
+      // damping
+      this.vx *= .999; this.vy *= .999;
     }
     draw(){
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${this.hue === 255 ? '108,92,231' : '0,206,201'},${this.opacity})`;
+      ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(120,130,240,${this.alpha})`;
       ctx.fill();
     }
   }
 
-  function initParticles(){
-    const count = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 15000));
-    particles = [];
-    for(let i = 0; i < count; i++) particles.push(new Particle());
-  }
-  initParticles();
+  for(let i=0;i<COUNT;i++) particles.push(new Particle());
 
-  function drawConnections(){
-    for(let i = 0; i < particles.length; i++){
-      for(let j = i + 1; j < particles.length; j++){
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist < 150){
+  function animate(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{p.update();p.draw()});
+    // connections
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<CONNECT_DIST){
           ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(108,92,231,${0.08 * (1 - dist/150)})`;
-          ctx.lineWidth = 0.5;
+          ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(99,102,241,${.08*(1-dist/CONNECT_DIST)})`;
+          ctx.lineWidth=.5;
           ctx.stroke();
         }
       }
     }
+    requestAnimationFrame(animate);
   }
+  animate();
 
-  function animateParticles(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => { p.update(); p.draw(); });
-    drawConnections();
-    animFrame = requestAnimationFrame(animateParticles);
-  }
-  animateParticles();
+  document.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+  document.addEventListener('mouseleave',()=>{mouse.x=-1000;mouse.y=-1000});
+})();
 
-  document.querySelector('.hero').addEventListener('mousemove', e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
+// ============================================================
+// SCROLL REVEAL — IntersectionObserver
+// ============================================================
+(function(){
+  const els = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){e.target.classList.add('revealed');obs.unobserve(e.target)}
+    });
+  },{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+  els.forEach(el=>obs.observe(el));
+})();
+
+// ============================================================
+// CARD GLOW FOLLOW — mouse position on pain cards
+// ============================================================
+(function(){
+  document.querySelectorAll('.pain-card').forEach(card=>{
+    card.addEventListener('mousemove',e=>{
+      const rect=card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX-rect.left)+'px');
+      card.style.setProperty('--my', (e.clientY-rect.top)+'px');
+    });
   });
-  document.querySelector('.hero').addEventListener('mouseleave', () => {
-    mouse.x = -1000;
-    mouse.y = -1000;
-  });
+})();
 
-  // ============ SCROLL REVEAL ============
-  const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting){
-        entry.target.classList.add('visible');
-        revealObserver.unobserve(entry.target);
+// ============================================================
+// COUNTER ANIMATION — count up when visible
+// ============================================================
+(function(){
+  const counters = document.querySelectorAll('[data-target]');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const el=e.target, target=parseInt(el.dataset.target), suffix=el.dataset.suffix||'';
+        let current=0;
+        const step=Math.max(1,Math.floor(target/60));
+        const timer=setInterval(()=>{
+          current+=step;
+          if(current>=target){current=target;clearInterval(timer)}
+          el.textContent=current.toLocaleString()+suffix;
+        },30);
+        obs.unobserve(el);
       }
     });
-  }, {threshold: 0.15, rootMargin: '0px 0px -40px 0px'});
-  revealEls.forEach(el => revealObserver.observe(el));
+  },{threshold:.5});
+  counters.forEach(el=>obs.observe(el));
+})();
 
-  // ============ FLOW STEP ANIMATION ============
-  const flowSteps = document.querySelectorAll('.flow-step');
-  const flowArrows = document.querySelectorAll('.flow-arrow');
-  const flowContainer = document.querySelector('.hypothesis-flow');
-  let flowAnimated = false;
-
-  const flowObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting && !flowAnimated){
-        flowAnimated = true;
-        const items = [];
-        flowSteps.forEach(s => items.push(s));
-        flowArrows.forEach(a => items.push(a));
-        items.forEach((item, i) => {
-          setTimeout(() => {
-            item.classList.add('flow-visible');
-          }, i * 200);
+// ============================================================
+// WORKFLOW STEP REVEAL — progressive activation
+// ============================================================
+(function(){
+  const steps = document.querySelectorAll('.workflow-step');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const step=parseInt(e.target.dataset.step);
+        steps.forEach((s,i)=>{
+          if(i<step) setTimeout(()=>s.classList.add('active'), i*200);
         });
-        flowObserver.unobserve(entry.target);
+        obs.unobserve(e.target);
       }
     });
-  }, {threshold: 0.2});
-  if(flowContainer) flowObserver.observe(flowContainer);
+  },{threshold:.5});
+  steps.forEach(s=>obs.observe(s));
+})();
 
-  // ============ TABLE ROW ANIMATION ============
-  const tableRows = document.querySelectorAll('.hypothesis-table tbody tr');
-  const table = document.querySelector('.hypothesis-table');
-  let tableAnimated = false;
+// ============================================================
+// NAV SCROLL EFFECT
+// ============================================================
+(function(){
+  const nav=document.getElementById('nav');
+  window.addEventListener('scroll',()=>{
+    nav.classList.toggle('scrolled',window.scrollY>50);
+  });
+})();
 
-  const tableObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting && !tableAnimated){
-        tableAnimated = true;
-        tableRows.forEach((row, i) => {
-          setTimeout(() => {
-            row.classList.add('table-visible');
-          }, i * 120);
-        });
-        tableObserver.unobserve(entry.target);
-      }
-    });
-  }, {threshold: 0.2});
-  if(table) tableObserver.observe(table);
-
-  // ============ COUNTER ANIMATION ============
-  const counterEls = document.querySelectorAll('.metric-card .value[data-target]');
-  let countersAnimated = false;
-
-  function animateCounter(el){
-    const target = parseInt(el.dataset.target);
-    const suffix = el.dataset.suffix || '';
-    const duration = 2000;
-    const start = performance.now();
-
-    function easeOutQuart(t){ return 1 - Math.pow(1 - t, 4); }
-
-    function tick(now){
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = easeOutQuart(progress);
-      const current = Math.round(eased * target);
-      el.textContent = current.toLocaleString() + suffix;
-      if(progress < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }
-
-  const counterObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting && !countersAnimated){
-        countersAnimated = true;
-        counterEls.forEach(el => animateCounter(el));
-        counterObserver.unobserve(entry.target);
-      }
-    });
-  }, {threshold: 0.3});
-  if(counterEls.length) counterObserver.observe(counterEls[0].closest('.metrics-grid'));
-
-  // ============ OUTPUT LINE ANIMATION ============
-  const outputLines = document.querySelectorAll('.output-line');
-  const outputDemo = document.querySelector('.output-demo');
-  let outputAnimated = false;
-
-  const outputObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting && !outputAnimated){
-        outputAnimated = true;
-        outputLines.forEach((line, i) => {
-          setTimeout(() => {
-            line.classList.add('line-visible');
-          }, i * 80);
-        });
-        outputObserver.unobserve(entry.target);
-      }
-    });
-  }, {threshold: 0.2});
-  if(outputDemo) outputObserver.observe(outputDemo);
-
-  // ============ CARD GLOW MOUSE TRACKING ============
-  document.querySelectorAll('.problem-card, .metric-card').forEach(card => {
-    card.addEventListener('mousemove', e => {
-      const rect = card.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      card.style.setProperty('--mouse-x', x + '%');
-      card.style.setProperty('--mouse-y', y + '%');
+// ============================================================
+// PARALLAX SCROLL — subtle vertical movement
+// ============================================================
+(function(){
+  const orbs=document.querySelectorAll('.orb');
+  window.addEventListener('scroll',()=>{
+    const scroll=window.scrollY;
+    orbs.forEach((orb,i)=>{
+      const speed=.03*(i+1);
+      orb.style.transform=`translateY(${scroll*speed}px)`;
     });
   });
-
-  // ============ PARALLAX HERO ============
-  let ticking = false;
-  window.addEventListener('scroll', () => {
-    if(!ticking){
-      requestAnimationFrame(() => {
-        const scrollY = window.scrollY;
-        const hero = document.querySelector('.hero');
-        if(hero && scrollY < window.innerHeight){
-          const h1 = hero.querySelector('h1');
-          const tagline = hero.querySelector('.tagline');
-          const badges = hero.querySelector('.badges');
-          if(h1) h1.style.transform = `translateY(${scrollY * 0.15}px)`;
-          if(tagline) tagline.style.transform = `translateY(${scrollY * 0.1}px)`;
-          if(badges) badges.style.transform = `translateY(${scrollY * 0.05}px)`;
-          hero.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
-        }
-        ticking = false;
-      });
-      ticking = true;
-    }
-  });
-
 })();
 </script>
-
 </body>
 </html>
