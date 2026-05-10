@@ -1,0 +1,15 @@
+{
+  "id": "long-context",
+  "name": "Long Context Stress",
+  "description": "Push MiMo conversations from 32K to 128K tokens and measure compaction behavior",
+  "params": {
+    "targetTokens": [32000, 64000, 128000],
+    "iterations": 10,
+    "turnsPerTarget": 20
+  },
+  "prompts": {
+    "seed": "Explain the architecture of a modern LLM inference engine in comprehensive detail.",
+    "followup": "Continue. Go deeper into the {topic} component."
+  },
+  "metrics": ["ttft", "tpot", "e2e", "context_tokens", "compaction_delta"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "multi-agent",
+  "name": "Multi-Agent Parallel",
+  "description": "Concurrent sessions to measure throughput under parallel load",
+  "params": {
+    "concurrency": [3, 5, 10],
+    "sessionLength": 20,
+    "iterations": 5
+  },
+  "metrics": ["throughput", "error_rate", "p99_latency"]
+}

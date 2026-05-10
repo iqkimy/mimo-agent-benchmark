@@ -1,137 +1,103 @@
 # MiMo Agent Benchmark
 
-A comprehensive, long-running automated benchmark system for Xiaomi MiMo-V2.5 series models in real-world AI Agent scenarios.
+Automated performance testing for Xiaomi MiMo-V2.5 across realistic AI Agent workloads.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Stage: Alpha](https://img.shields.io/badge/Stage-Alpha-orange.svg)]()
+[![CI](https://github.com/iqkimy/mimo-agent-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/iqkimy/mimo-agent-benchmark/actions)
 
-## Why This Project
+---
 
-MiMo-V2.5 is Xiaomi's flagship model series covering text, multimodal, and voice. As Agent frameworks (OpenClaw, Claude Code, Cursor, etc.) increasingly adopt MiMo models via API, several real-world performance bottlenecks emerge under production-like workloads:
+## Why Build This
 
-- **Context management overhead**: Compaction mechanisms behave differently across providers, causing unbounded context growth and degraded cache hit rates in long-running Agent sessions.
-- **Reasoning field overhead**: MiMo's `reasoning_content` output adds processing latency in frameworks not optimized for this field.
-- **Multi-tool orchestration stress**: Agent scenarios with heavy tool calls (10-50+ tools per turn) expose bottlenecks in token throughput and response time stability.
-- **Sustained load degradation**: TTFT (Time To First Token) and TPOT (Time Per Output Token) degrade measurably over extended sessions, but there's no public benchmark quantifying this.
+Agent frameworks like OpenClaw and Claude Code are adopting MiMo-V2.5 at scale. But there's no public data on how MiMo actually performs under the kind of workloads these frameworks generate: long sessions with growing context, dozens of tool calls per turn, multi-agent parallelism, and hours of continuous operation.
 
-**This project fills that gap.** We build a continuously-running benchmark that tests MiMo-V2.5 in realistic, demanding Agent scenarios and produces actionable optimization data.
+This benchmark suite generates that data. Run it, get numbers, make informed decisions about MiMo configuration and optimization priorities.
 
-## Project Goals
+## What Gets Tested
 
-1. **Quantify MiMo-V2.5 performance** across diverse Agent workloads (long context, multi-tool, multi-agent, planning tasks)
-2. **Identify optimization opportunities** in MiMo's inference pipeline through systematic profiling
-3. **Produce a public benchmark suite** that the MiMo community can use to evaluate and compare model configurations
-4. **Contribute optimization patches** back to MiMo-compatible frameworks based on empirical data
+Five workload patterns, each designed to stress a different part of the MiMo inference stack:
 
-## Benchmark Scenarios
+**Long Context** — Pushes conversations from 32K to 128K tokens. Measures how context compaction affects TTFT and whether cache behavior degrades on token-plan providers.
 
-| Scenario | Description | Key Metrics |
-|----------|-------------|-------------|
-| Long Context | 32K-128K token conversations with context compaction | TTFT, compaction time, cache hit rate |
-| Multi-Tool | Agent tasks requiring 10-50+ tool calls per turn | TPOT, total latency, error rate |
-| Planning & Reasoning | Complex multi-step planning with chain-of-thought | Reasoning overhead, accuracy |
-| Multi-Agent | Parallel agent sessions with shared context | Throughput, memory usage |
-| Sustained Load | 8+ hour continuous operation sessions | Latency drift, resource stability |
+**Multi-Tool Orchestration** — Fires 10, 20, or 50 tool definitions at MiMo per turn. Tests whether tool schema processing creates meaningful overhead.
 
-## System Architecture
+**Complex Planning** — Runs multi-step planning tasks with increasing complexity (3, 5, 10 steps). Isolates reasoning overhead from output generation.
 
-```
-src/
-├── benchmark/
-│   ├── scenarios/        # Scenario definitions and generators
-│   ├── runner/           # Test execution engine
-│   └── reporter/         # Structured performance reports
-├── profiler/
-│   ├── latency/          # TTFT, TPOT, E2E measurement
-│   ├── resource/         # CPU, memory, network monitoring
-│   └── context/          # Context window utilization tracking
-├── optimizer/
-│   ├── analyzer/         # Bottleneck identification
-│   └── generator/        # Optimization suggestion generation
-├── integrations/
-│   ├── mimo-api/         # MiMo API client wrapper
-│   └── github/           # Automated PR and CI integration
-├── data/
-│   ├── raw/              # Raw benchmark results
-│   └── reports/          # Aggregated analysis reports
-└── config/               # Benchmark configurations and thresholds
-```
+**Multi-Agent Parallelism** — Spawns 3, 5, or 10 concurrent sessions against MiMo. Measures throughput degradation under parallel load.
 
-## Metrics Collected
+**Sustained Load** — Runs continuously for 8+ hours at 5-second intervals. Tracks latency drift and identifies when performance starts degrading.
 
-### Latency
-- **TTFT** (Time To First Token): Measured at P50, P95, P99
-- **TPOT** (Time Per Output Token): Measured at P50, P95, P99
-- **E2E Latency**: End-to-end response time including all overhead
+## Metrics
 
-### Resource
-- **Token throughput**: Tokens/second sustained rate
-- **Context window utilization**: Active tokens vs maximum capacity
-- **API call efficiency**: Tokens consumed per useful output token
+Every test run produces:
+- **TTFT** — Time to first token, at P50/P95/P99
+- **TPOT** — Time per output token, at P50/P95/P99
+- **E2E** — End-to-end response latency
+- **Token throughput** — Sustained tokens/second
+- **Error rate** — Timeouts, rate limits, context overflows
 
-### Quality
-- **Task completion rate**: Success rate across scenario types
-- **Regression rate**: Performance degradation over session duration
-- **Error classification**: Timeout, rate limit, context overflow, etc.
-
-## Usage
+## Getting Started
 
 ```bash
-git clone https://github.com/USER/mimo-agent-benchmark.git
+git clone git@github.com:iqkimy/mimo-agent-benchmark.git
 cd mimo-agent-benchmark
 npm install
 
-cp config/config.example.json config/config.json
-# Edit config.json with your MiMo API credentials
+# Configure
+cp config/config.example.json config.json
+# Edit config.json → add your MiMo API key
 
-npm run benchmark
-npm run benchmark -- --scenario long-context
-npm run report
-npm run analyze -- --input data/reports/latest.json
+# Run
+npm run benchmark              # all scenarios
+npm run benchmark -- --scenario long-context   # one scenario
+npm run report                 # generate markdown report
 ```
 
-## Sample Configuration
+## Configuration
 
 ```json
 {
   "mimo": {
     "baseUrl": "https://token-plan-cn.xiaomimimo.com/v1",
-    "model": "mimo-v2.5-pro",
-    "maxTokens": 8192
+    "apiKey": "YOUR_KEY",
+    "model": "mimo-v2.5-pro"
   },
   "benchmark": {
-    "scenarios": ["long-context", "multi-tool", "planning", "multi-agent"],
+    "scenarios": ["long-context", "multi-tool", "planning"],
     "iterations": 10,
-    "concurrency": 3,
-    "duration": "8h"
+    "concurrency": 3
   }
 }
 ```
 
+Models supported: `mimo-v2.5-pro`, `mimo-v2.5-omni`, `mimo-v2.5-flash`
+
+## Project Structure
+
+```
+├── src/
+│   ├── benchmark/
+│   │   ├── scenarios/     ← workload definitions
+│   │   └── runner/        ← execution engine
+│   └── profiler/
+│       └── latency/       ← timing measurement
+├── config/                ← API credentials (gitignored)
+├── docs/                  ← architecture + metric specs
+├── test/                  ← unit tests
+└── .github/workflows/     ← CI pipeline
+```
+
 ## Roadmap
 
-### Phase 1: Core Benchmark (Week 1-2)
-- [x] Project structure and scenario definitions
-- [ ] Basic benchmark runner with latency profiling
-- [ ] MiMo API integration and error handling
-- [ ] First benchmark report generation
-
-### Phase 2: Optimization Analysis (Week 3-4)
-- [ ] Bottleneck identification engine
-- [ ] Context management optimization testing
-- [ ] Reasoning field overhead measurement
-- [ ] Comparative analysis: MiMo-V2.5-Pro vs Omni vs Flash
-
-### Phase 3: Continuous Operation (Week 5+)
-- [ ] 30-day continuous benchmark pipeline
-- [ ] Weekly performance regression reports
-- [ ] Automated optimization PR generation
-- [ ] Public benchmark dashboard
+| Phase | Timeline | Deliverable |
+|-------|----------|-------------|
+| Core benchmark | Week 1-2 | Working scenario runner + latency profiler |
+| Analysis | Week 3-4 | Bottleneck identification + comparative reports |
+| Continuous | Week 5+ | 30-day run + weekly regression reports |
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Open to contributions that add new scenarios, improve measurement accuracy, or expand model coverage. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT License - see [LICENSE](LICENSE).
+MIT
